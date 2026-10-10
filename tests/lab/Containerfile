@@ -1,0 +1,36 @@
+# Imagen del lab: Fedora con systemd como PID 1 y un usuario normal con sudo.
+#
+# Arranca con /sbin/init (podman --systemd=always), así que dentro hay systemd de
+# verdad: se pueden probar hooks que habilitan servicios o instaladores que lo
+# exigen. dots se aplica como el usuario "lab" (no root), igual que en una máquina
+# real: los pasos que piden root escalan con sudo.
+#
+# up.sh compila el binario (estático) en tests/lab/dots antes del build.
+FROM fedora:41
+
+# systemd (PID 1), sudo (escalado de dots y hooks) y git (contenido). Sin limpiar
+# la caché de dnf no pasa nada: es una imagen efímera.
+RUN dnf install -y systemd sudo git procps-ng >/dev/null \
+	&& useradd -m lab \
+	&& echo 'lab ALL=(ALL) NOPASSWD: ALL' >/etc/sudoers.d/lab \
+	&& chmod 0440 /etc/sudoers.d/lab
+
+# upterm: acceso remoto al lab desde el workflow (sesión SSH por el servidor
+# público de upterm). Versión fijada y tarball verificado contra su checksum.
+ARG UPTERM_VERSION=v0.33.0
+ARG UPTERM_SHA256=17f35ebfd65a77ca2e5df841f0342950d4322cb8752ad7a7adfee8c3854a50f7
+RUN curl -fsSL -o /tmp/upterm.tar.gz \
+		"https://github.com/owenthereal/upterm/releases/download/${UPTERM_VERSION}/upterm_linux_amd64.tar.gz" \
+	&& echo "${UPTERM_SHA256}  /tmp/upterm.tar.gz" | sha256sum -c - >/dev/null \
+	&& tar -xzf /tmp/upterm.tar.gz -C /usr/local/bin upterm \
+	&& rm -f /tmp/upterm.tar.gz
+
+COPY dots /usr/local/bin/dots
+RUN ln -sf dots /usr/local/bin/ds
+
+# El contenido de muestra se COPIA a la home del usuario, escribible y suyo, para
+# que los comandos que escriben en él (dots add, sync…) funcionen. El fixture del
+# repo queda intacto.
+COPY --chown=lab:lab content /home/lab/content
+
+CMD ["/sbin/init"]

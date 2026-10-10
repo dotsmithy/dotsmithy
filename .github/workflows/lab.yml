@@ -2,9 +2,12 @@
 #
 # NO corre en push ni en PR: solo cuando lo lanzas tú (workflow_dispatch, desde
 # la pestaña Actions o con `gh workflow run lab.yml`). Levanta una Fedora limpia,
-# instala dots, aplica un contenido de muestra y abre una sesión SSH (tmate) que
-# se queda esperando hasta 2 h para que entres y valides. Para cerrarlo antes,
-# dentro de la sesión: `touch /tmp/close-lab`.
+# con systemd como PID 1, aplica un contenido de muestra como usuario normal (con
+# sudo) y abre una sesión SSH remota (upterm) que se queda esperando hasta 2 h
+# para que entres y valides. Solo pueden entrar las claves SSH que tenga en GitHub
+# quien lanza el workflow. Con systemd dentro se pueden probar hooks que habilitan
+# servicios o instaladores que lo exigen. Para cerrarlo antes: sal de la shell
+# o haz `touch /tmp/close-lab`.
 name: Lab
 
 on:
@@ -15,7 +18,7 @@ permissions:
 
 jobs:
   lab:
-    name: lab (Fedora + SSH)
+    name: lab (Fedora + systemd + SSH)
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -23,29 +26,14 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: compilar dots (estático)
-        run: CGO_ENABLED=0 go build -trimpath -o tests/lab/dots ./cmd/dots
-      # El contenido de muestra vive versionado en tests/lab/content (fixture);
-      # aquí solo se monta junto al binario recién compilado.
-      - name: levantar Fedora, aplicar y abrir SSH (tmate)
-        run: |
-          docker run --rm -v "$PWD/tests/lab:/lab:ro" fedora:41 bash -c '
-            set -e
-            echo ">> instalando dependencias (git, tmate)…"
-            dnf install -y git tmate >/dev/null
-            install -m 0755 /lab/dots /usr/local/bin/dots
-            ln -sf dots /usr/local/bin/ds
-            echo ">> aplicando el contenido de muestra (dots init)…"
-            dots init --profile minipc --content /lab/content || echo "(init terminó con avisos)"
-            echo ">> abriendo sesión SSH (tmate)…"
-            tmate -S /tmp/t.sock new-session -d
-            tmate -S /tmp/t.sock wait tmate-ready
-            echo "=================== LAB LISTO ==================="
-            echo "SSH:  $(tmate -S /tmp/t.sock display -p "#{tmate_ssh}")"
-            echo "WEB:  $(tmate -S /tmp/t.sock display -p "#{tmate_web}")"
-            echo "Estás root en una Fedora con dots ya aplicado. Prueba: ds --help, ls -la ~"
-            echo "Para cerrar el lab antes de 2 h: touch /tmp/close-lab"
-            echo "================================================"
-            while [ ! -e /tmp/close-lab ]; do sleep 10; done
-            echo ">> cierre solicitado, saliendo."
-          '
+      # Todo el montaje vive en tests/lab/up.sh (también sirve en local): compila
+      # dots, construye la imagen, arranca Fedora con systemd, aplica el contenido
+      # de muestra como usuario normal y, con LAB_REMOTE=1, abre la sesión SSH.
+      - name: levantar Fedora con systemd, aplicar y abrir SSH (upterm)
+        env:
+          LAB_REMOTE: "1"
+          LAB_GITHUB_USER: ${{ github.actor }}
+          # Podman como root: el rootless del runner no deja a sudo leer
+          # /etc/shadow dentro del contenedor.
+          LAB_PODMAN: sudo podman
+        run: ./tests/lab/up.sh
