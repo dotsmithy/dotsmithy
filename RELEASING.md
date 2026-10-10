@@ -37,4 +37,6 @@ curl -fsSL https://raw.githubusercontent.com/kreikol/dotsmithy/main/script/insta
 
 - `main` en verde (build + test + integración Fedora + shellcheck + shim).
 - Sin dependencias ni versiones a medio en el código.
-- Comprobar el empaquetado en local sin publicar: `goreleaser release --snapshot --clean`.
+- Comprobar el empaquetado sin publicar, en local (`goreleaser release --snapshot --clean`)
+  o en GitHub lanzando a mano el workflow **Release** (`gh workflow run release.yml`):
+  hace lo mismo en modo snapshot y no publica nada.

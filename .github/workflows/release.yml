@@ -1,10 +1,15 @@
 # Release de dotsmithy: al empujar un tag semver (vX.Y.Z), goreleaser empaqueta
 # y publica los binarios (linux amd64 + arm64) en la Release de GitHub.
+#
+# Lanzado a mano (workflow_dispatch) es un ensayo: empaqueta en modo snapshot y
+# NO publica nada. Sirve para comprobar el pipeline (p.ej. tras subir de versión
+# las actions) sin tener que sacar una release.
 name: Release
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,15 +18,15 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"
-          args: release --clean
+          args: ${{ github.event_name == 'workflow_dispatch' && 'release --snapshot --clean' || 'release --clean' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
