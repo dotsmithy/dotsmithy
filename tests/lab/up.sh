@@ -131,8 +131,10 @@ Prueba: ds --help, systemctl status, ls -la ~
 Para cerrar el lab: sal de la shell (exit) o haz touch /tmp/close-lab
 ================================================
 MSG
-# Esperamos hasta que la sesión termine o se pida el cierre.
-while lab_exec "upterm session info lab >/dev/null 2>&1" &&
+# Esperamos hasta que la sesión termine o se pida el cierre. Miramos si sigue vivo
+# el proceso de upterm: `upterm session info` devuelve 0 incluso con la sesión ya
+# terminada (la enseña con "Status: ended").
+while lab_exec "pgrep -u lab -x upterm >/dev/null" &&
 	! "${PODMAN[@]}" exec "$NAME" test -e /tmp/close-lab; do
 	sleep 10
 done
