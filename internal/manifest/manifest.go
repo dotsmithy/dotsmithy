@@ -24,7 +24,7 @@ const (
 	// MachinesDir es la carpeta que aloja una capa por máquina, la última de la
 	// pila: machines/<machine>.
 	MachinesDir = "machines"
-	// HooksDir es la carpeta de hooks dentro del contenido.
+	// HooksDir es la carpeta de hooks dentro de cada capa: <capa>/hooks/<punto>/.
 	HooksDir = "hooks"
 )
 

@@ -3,7 +3,8 @@
 # Orquesta el test de integración en contenedor:
 #   1) compila el motor para linux/amd64, estático (como en una release);
 #   2) construye la imagen Fedora con el binario dentro;
-#   3) corre los escenarios (smoke + init/link/paquetes/system/hooks/externals).
+#   3) corre los escenarios (smoke + init/link/paquetes/system/hooks/externals +
+#      perfiles compuestos).
 #
 # Necesita un motor de contenedores en el HOST (podman o docker).
 #
@@ -57,6 +58,9 @@ echo ">> corriendo el smoke test dentro del contenedor…"
 
 echo ">> corriendo la integración de paquetes (necesita red para dnf)…"
 "$ENGINE" run --rm "$IMAGE" /usr/local/bin/packages.sh
+
+echo ">> corriendo la integración de perfiles compuestos…"
+"$ENGINE" run --rm "$IMAGE" /usr/local/bin/profiles.sh
 
 echo ">> limpiando el binario temporal…"
 rm -f "$HERE/dots"

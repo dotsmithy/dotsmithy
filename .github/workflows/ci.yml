@@ -64,3 +64,12 @@ jobs:
             bash tests/integration/smoke.sh
             bash tests/integration/packages.sh
           '
+      # Perfiles compuestos, en un contenedor aparte para partir de un $HOME limpio.
+      - name: escenario de perfiles compuestos en Fedora
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w fedora:41 bash -c '
+            set -euo pipefail
+            install -m 0755 tests/integration/dots /usr/local/bin/dots
+            ln -sf dots /usr/local/bin/ds
+            bash tests/integration/profiles.sh
+          '
