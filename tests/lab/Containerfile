@@ -1,0 +1,26 @@
+# Imagen del lab: Fedora con systemd como PID 1 y un usuario normal con sudo.
+#
+# Arranca con /sbin/init (podman --systemd=always), así que dentro hay systemd de
+# verdad: se pueden probar hooks que habilitan servicios o instaladores que lo
+# exigen. dots se aplica como el usuario "lab" (no root), igual que en una máquina
+# real: los pasos que piden root escalan con sudo.
+#
+# up.sh compila el binario (estático) en tests/lab/dots antes del build.
+FROM fedora:41
+
+# systemd (PID 1), sudo (escalado de dots y hooks), git (contenido) y tmate (SSH
+# del workflow). Sin limpiar la caché de dnf no pasa nada: es una imagen efímera.
+RUN dnf install -y systemd sudo git tmate procps-ng >/dev/null \
+	&& useradd -m lab \
+	&& echo 'lab ALL=(ALL) NOPASSWD: ALL' >/etc/sudoers.d/lab \
+	&& chmod 0440 /etc/sudoers.d/lab
+
+COPY dots /usr/local/bin/dots
+RUN ln -sf dots /usr/local/bin/ds
+
+# El contenido de muestra se COPIA a la home del usuario, escribible y suyo, para
+# que los comandos que escriben en él (dots add, sync…) funcionen. El fixture del
+# repo queda intacto.
+COPY --chown=lab:lab content /home/lab/content
+
+CMD ["/sbin/init"]
