@@ -34,7 +34,7 @@ Perfil y contenido se resuelven igual que en link: flags, o el estado local.`,
 				return err
 			}
 
-			layers := m.ResolvedLayers(profile)
+			layers := m.Stack(profile)
 			if len(m.Packages.Managers) == 0 {
 				fmt.Println("no declaras ningún gestor de paquetes; nada que mirar.")
 				return nil

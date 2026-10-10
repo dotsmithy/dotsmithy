@@ -8,8 +8,9 @@ import (
 )
 
 // applyPackages instala los paquetes declarados que falten, gestor por gestor.
-// Habilita antes los repos COPR declarados (dnf). Respeta --dry-run (solo
-// informa). Es idempotente: si todo está, no hace nada. Lo usa init.
+// Habilita antes los repos COPR que declaran las capas de la pila (dnf).
+// Respeta --dry-run (solo informa). Es idempotente: si todo está, no hace nada.
+// Lo usa init.
 func applyPackages(m *manifest.Manifest, contentDir string, layers []string) error {
 	if len(m.Packages.Managers) == 0 {
 		return nil
@@ -42,10 +43,10 @@ func applyPackages(m *manifest.Manifest, contentDir string, layers []string) err
 		}
 
 		// COPR (dnf): habilitar los repos declarados antes de instalar.
-		if mgrName == "dnf" && m.Packages.DNF != nil && len(m.Packages.DNF.COPR) > 0 {
+		if copr := m.COPR(layers); mgrName == "dnf" && len(copr) > 0 {
 			if cm, ok := mgr.(packages.COPRManager); ok {
-				fmt.Printf("· habilitando %d repo(s) COPR…\n", len(m.Packages.DNF.COPR))
-				if err := cm.EnableCOPR(m.Packages.DNF.COPR); err != nil {
+				fmt.Printf("· habilitando %d repo(s) COPR…\n", len(copr))
+				if err := cm.EnableCOPR(copr); err != nil {
 					return err
 				}
 			}

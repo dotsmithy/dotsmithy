@@ -13,8 +13,9 @@ import (
 	"go.kreikol.dev/dotsmithy/internal/stow"
 )
 
-// newLinkCmd: despliega los symlinks a $HOME (modelo Stow), resolviendo las
-// capas (shared + perfil). Idempotente: re-ejecutar no rompe nada.
+// newLinkCmd: despliega los symlinks a $HOME (modelo Stow), resolviendo la
+// pila de capas del perfil (shared + dimensiones + máquina). Idempotente:
+// re-ejecutar no rompe nada.
 func newLinkCmd() *cobra.Command {
 	var contentDir string
 	var profile string
@@ -24,10 +25,10 @@ func newLinkCmd() *cobra.Command {
 		Use:   "link",
 		Short: "despliega los dotfiles a $HOME (symlinks, modelo Stow)",
 		Args:  noArgs,
-		Long: `link resuelve las capas (shared + perfil de máquina) y crea los symlinks
-en tu $HOME apuntando a los ficheros reales del repo. Es idempotente: si ya
-está enlazado, no hace nada; si falta, lo crea. Con --dry-run enseña el plan
-sin tocar nada.
+		Long: `link resuelve la pila de capas del perfil (shared, una por dimensión y la
+máquina) y crea los symlinks en tu $HOME apuntando a los ficheros reales del
+repo. Es idempotente: si ya está enlazado, no hace nada; si falta, lo crea. Con
+--dry-run enseña el plan sin tocar nada.
 
 Si hay un fichero real donde iría un symlink, por defecto aborta sin tocar nada.
 Con --backup, mueve ese fichero a un «.dots-bak» y crea el symlink.
@@ -111,7 +112,7 @@ func loadManifestForProfile(contentDir, profile string) (*manifest.Manifest, err
 // flags globales --dry-run y --verbose, y el --backup del comando). Es el corazón
 // de link, reutilizado por init/update tras preparar el contenido.
 func applyStow(m *manifest.Manifest, contentDir, profile string, backup bool) error {
-	layers := m.ResolvedLayers(profile)
+	layers := m.Stack(profile)
 	plan, err := stow.BuildPlan(contentDir, m.Stow.Subdir, m.Stow.Target, layers)
 	if err != nil {
 		return err
