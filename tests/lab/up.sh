@@ -104,14 +104,25 @@ fi
 trap '"${PODMAN[@]}" rm -f "$NAME" >/dev/null 2>&1 || true' EXIT
 
 echo ">> abriendo sesión SSH (tmate)…"
-# Si tmate no llega a su servidor, `wait tmate-ready` espera para siempre y el job
-# se comería las 2 h sin decir nada: le ponemos un tope y lo cantamos.
-if ! lab_exec "tmate -S /tmp/t.sock new-session -d && timeout 120 tmate -S /tmp/t.sock wait tmate-ready"; then
+# Arrancamos el servidor de tmate (con log detallado en la home de lab, -v) y
+# preguntamos por la dirección SSH hasta que aparezca. No usamos `wait
+# tmate-ready`: si la sesión ya estaba lista cuando se lanza, se queda esperando
+# un evento que ya pasó. Con tope de 2 minutos, para no comernos las 2 h del job.
+lab_exec "tmate -v -S /tmp/t.sock new-session -d"
+ssh_line=""
+for _ in $(seq 1 24); do
+	ssh_line="$(lab_exec 'tmate -S /tmp/t.sock display -p "#{tmate_ssh}"' 2>/dev/null || true)"
+	[ -n "$ssh_line" ] && break
+	sleep 5
+done
+if [ -z "$ssh_line" ]; then
 	echo "tmate no ha conseguido conectar con su servidor en 2 minutos (¿hay salida a tmate.io?)." >&2
+	echo "--- log de tmate:" >&2
+	lab_exec 'tail -n 40 ~/tmate-*.log' >&2 || true
 	exit 1
 fi
 echo "=================== LAB LISTO ==================="
-echo "SSH:  $(lab_exec 'tmate -S /tmp/t.sock display -p "#{tmate_ssh}"')"
+echo "SSH:  $ssh_line"
 echo "WEB:  $(lab_exec 'tmate -S /tmp/t.sock display -p "#{tmate_web}"')"
 echo "Entras como el usuario lab (sudo sin contraseña) en una Fedora con systemd y dots aplicado."
 echo "Prueba: ds --help, systemctl status, ls -la ~"
