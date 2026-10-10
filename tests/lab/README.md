@@ -19,8 +19,11 @@ contenido de muestra ya aplicado.
 ## Uso
 
 En el workflow manual **Lab** (`.github/workflows/lab.yml`), `up.sh` corre con
-`LAB_TMATE=1`: abre una sesión SSH por tmate y espera hasta 2 h, o hasta que
-hagas `touch /tmp/close-lab` dentro.
+`LAB_REMOTE=1` y `LAB_GITHUB_USER` = quien lo lanza: abre una sesión SSH remota
+con [upterm](https://github.com/owenthereal/upterm) a la que **solo pueden entrar
+las claves SSH que esa cuenta tiene en GitHub**. El comando `ssh` para entrar sale
+en el log del job. El lab dura hasta 2 h; se cierra antes saliendo de la shell
+(`exit`) o con `touch /tmp/close-lab`.
 
 En local (desde el devbox del proyecto, que aporta Go; podman sale del sistema):
 

@@ -7,10 +7,12 @@
 #   3) arranca el contenedor con systemd como PID 1 y espera a que esté listo;
 #   4) aplica el contenido de muestra como el usuario "lab" (dots init).
 #
-# Después, según LAB_TMATE:
-#   - LAB_TMATE=1 (lo usa el workflow Lab): abre una sesión tmate y se queda
-#     esperando hasta que alguien haga `touch /tmp/close-lab` dentro del lab;
-#     al salir, borra el contenedor.
+# Después, según LAB_REMOTE:
+#   - LAB_REMOTE=1 (lo usa el workflow Lab): abre una sesión SSH remota con upterm
+#     a la que solo pueden entrar las claves públicas en GitHub de LAB_GITHUB_USER
+#     (obligatorio), y espera hasta que esa sesión termine (saliendo de la shell)
+#     o alguien haga `touch /tmp/close-lab` dentro del lab; al salir, borra el
+#     contenedor.
 #   - sin definir (uso local): deja el contenedor corriendo y te dice cómo entrar
 #     y cómo tirarlo.
 #
@@ -18,7 +20,7 @@
 # `podman run --systemd=always`, que en docker no existe tal cual. Por defecto va
 # rootless; con LAB_PODMAN se cambia el comando (el workflow usa "sudo podman",
 # porque el podman rootless de los runners de Ubuntu no deja leer /etc/shadow a
-# sudo ni da red al contenedor como hace falta).
+# sudo dentro del contenedor).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,6 +33,13 @@ read -r -a PODMAN <<<"${LAB_PODMAN:-podman}"
 
 if ! command -v podman >/dev/null 2>&1; then
 	echo "Necesito podman en el sistema para el lab (arranca Fedora con systemd) y no lo encuentro." >&2
+	exit 1
+fi
+
+# En modo remoto, sin una usuaria de GitHub a quien autorizar, cualquiera con el
+# enlace podría entrar. Eso no lo hacemos, y lo miramos antes de montar nada.
+if [ "${LAB_REMOTE:-}" = "1" ] && [ -z "${LAB_GITHUB_USER:-}" ]; then
+	echo "Para abrir el acceso remoto necesito LAB_GITHUB_USER (la cuenta de GitHub cuyas claves SSH pueden entrar)." >&2
 	exit 1
 fi
 
@@ -89,7 +98,7 @@ esac
 echo ">> aplicando el contenido de muestra como el usuario lab (dots init)…"
 lab_exec "dots init --profile minipc --content ~/content" || echo "(init terminó con avisos)"
 
-if [ "${LAB_TMATE:-}" != "1" ]; then
+if [ "${LAB_REMOTE:-}" != "1" ]; then
 	cat <<MSG
 =================== LAB LISTO ===================
 Fedora con systemd y dots aplicado, usuario "lab" (sudo sin contraseña).
@@ -100,33 +109,31 @@ MSG
 	exit 0
 fi
 
-# Modo workflow: el contenedor se borra al salir pase lo que pase.
+# El contenedor se borra al salir pase lo que pase.
 trap '"${PODMAN[@]}" rm -f "$NAME" >/dev/null 2>&1 || true' EXIT
 
-echo ">> abriendo sesión SSH (tmate)…"
-# Arrancamos el servidor de tmate (con log detallado en la home de lab, -v) y
-# preguntamos por la dirección SSH hasta que aparezca. No usamos `wait
-# tmate-ready`: si la sesión ya estaba lista cuando se lanza, se queda esperando
-# un evento que ya pasó. Con tope de 2 minutos, para no comernos las 2 h del job.
-lab_exec "tmate -v -S /tmp/t.sock new-session -d"
-ssh_line=""
-for _ in $(seq 1 24); do
-	ssh_line="$(lab_exec 'tmate -S /tmp/t.sock display -p "#{tmate_ssh}"' 2>/dev/null || true)"
-	[ -n "$ssh_line" ] && break
-	sleep 5
-done
-if [ -z "$ssh_line" ]; then
-	echo "tmate no ha conseguido conectar con su servidor en 2 minutos (¿hay salida a tmate.io?)." >&2
-	echo "--- log de tmate:" >&2
-	lab_exec 'tail -n 40 ~/tmate-*.log' >&2 || true
+echo ">> abriendo sesión SSH remota (upterm), solo para github:$LAB_GITHUB_USER…"
+# --detach deja la sesión corriendo en segundo plano e imprime cómo entrar. La
+# sesión es una shell de login del usuario lab; al salir de ella, termina.
+# --skip-host-key-check acepta la clave del servidor de upterm la primera vez:
+# la máquina es efímera y no guarda nada sensible. Con tope de 2 minutos para que,
+# si el servidor no responde, el job falle rápido en vez de comerse las 2 h.
+if ! lab_exec "timeout 120 upterm host --detach --accept --skip-host-key-check \
+	--name lab --authorized-user 'github:$LAB_GITHUB_USER' -- bash -l"; then
+	echo "upterm no ha conseguido abrir la sesión (¿hay salida a uptermd.upterm.dev?)." >&2
 	exit 1
 fi
-echo "=================== LAB LISTO ==================="
-echo "SSH:  $ssh_line"
-echo "WEB:  $(lab_exec 'tmate -S /tmp/t.sock display -p "#{tmate_web}"')"
-echo "Entras como el usuario lab (sudo sin contraseña) en una Fedora con systemd y dots aplicado."
-echo "Prueba: ds --help, systemctl status, ls -la ~"
-echo "Para cerrar el lab antes de tiempo: touch /tmp/close-lab"
-echo "================================================"
-until "${PODMAN[@]}" exec "$NAME" test -e /tmp/close-lab; do sleep 10; done
-echo ">> cierre solicitado, saliendo."
+cat <<'MSG'
+=================== LAB LISTO ===================
+Entra con el comando ssh de arriba. Estarás como el usuario lab (sudo sin
+contraseña) en una Fedora con systemd y dots aplicado.
+Prueba: ds --help, systemctl status, ls -la ~
+Para cerrar el lab: sal de la shell (exit) o haz touch /tmp/close-lab
+================================================
+MSG
+# Esperamos hasta que la sesión termine o se pida el cierre.
+while lab_exec "upterm session info lab >/dev/null 2>&1" &&
+	! "${PODMAN[@]}" exec "$NAME" test -e /tmp/close-lab; do
+	sleep 10
+done
+echo ">> sesión terminada o cierre solicitado, saliendo."

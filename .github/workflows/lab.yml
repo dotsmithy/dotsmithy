@@ -3,10 +3,11 @@
 # NO corre en push ni en PR: solo cuando lo lanzas tú (workflow_dispatch, desde
 # la pestaña Actions o con `gh workflow run lab.yml`). Levanta una Fedora limpia,
 # con systemd como PID 1, aplica un contenido de muestra como usuario normal (con
-# sudo) y abre una sesión SSH (tmate) que se queda esperando hasta 2 h para que
-# entres y valides. Con systemd dentro se pueden probar hooks que habilitan
-# servicios o instaladores que lo exigen. Para cerrarlo antes, dentro de la
-# sesión: `touch /tmp/close-lab`.
+# sudo) y abre una sesión SSH remota (upterm) que se queda esperando hasta 2 h
+# para que entres y valides. Solo pueden entrar las claves SSH que tenga en GitHub
+# quien lanza el workflow. Con systemd dentro se pueden probar hooks que habilitan
+# servicios o instaladores que lo exigen. Para cerrarlo antes: sal de la shell
+# o haz `touch /tmp/close-lab`.
 name: Lab
 
 on:
@@ -27,11 +28,12 @@ jobs:
           go-version-file: go.mod
       # Todo el montaje vive en tests/lab/up.sh (también sirve en local): compila
       # dots, construye la imagen, arranca Fedora con systemd, aplica el contenido
-      # de muestra como usuario normal y, con LAB_TMATE=1, abre la sesión SSH.
-      - name: levantar Fedora con systemd, aplicar y abrir SSH (tmate)
+      # de muestra como usuario normal y, con LAB_REMOTE=1, abre la sesión SSH.
+      - name: levantar Fedora con systemd, aplicar y abrir SSH (upterm)
         env:
-          LAB_TMATE: "1"
+          LAB_REMOTE: "1"
+          LAB_GITHUB_USER: ${{ github.actor }}
           # Podman como root: el rootless del runner no deja a sudo leer
-          # /etc/shadow dentro del contenedor y no le da la red que necesita tmate.
+          # /etc/shadow dentro del contenedor.
           LAB_PODMAN: sudo podman
         run: ./tests/lab/up.sh
