@@ -120,13 +120,13 @@ falla por permisos, te enseña la clave pública y cómo añadirla.`,
 			if err := applyStow(m, absContent, profile, backup); err != nil {
 				return err
 			}
-			if err := applySystem(m, absContent); err != nil {
+			if err := applySystem(m, absContent, profile); err != nil {
 				return err
 			}
 			if err := applyHook(m, absContent, profile, "post-link"); err != nil {
 				return err
 			}
-			if err := applyPackages(m, absContent, m.ResolvedLayers(profile)); err != nil {
+			if err := applyPackages(m, absContent, m.Stack(profile)); err != nil {
 				return err
 			}
 			if err := applyHook(m, absContent, profile, "post-packages"); err != nil {

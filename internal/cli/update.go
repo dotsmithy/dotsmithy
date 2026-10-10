@@ -47,13 +47,13 @@ Perfil y contenido se resuelven como en link: flags o el estado local.`,
 			if err := applyStow(m, contentDir, profile, backup); err != nil {
 				return err
 			}
-			if err := applySystem(m, contentDir); err != nil {
+			if err := applySystem(m, contentDir, profile); err != nil {
 				return err
 			}
 			if err := applyHook(m, contentDir, profile, "post-link"); err != nil {
 				return err
 			}
-			if err := applyPackages(m, contentDir, m.ResolvedLayers(profile)); err != nil {
+			if err := applyPackages(m, contentDir, m.Stack(profile)); err != nil {
 				return err
 			}
 			if err := applyHook(m, contentDir, profile, "post-packages"); err != nil {

@@ -1,0 +1,24 @@
+version: 2
+
+dimensions: [ux, identity]
+
+profiles:
+  desk:
+    description: "Escritorio de casa"
+    machine: desk
+    params: { ux: desktop, identity: personal }
+  devbox:
+    description: "Máquina remota de desarrollo"
+    machine: devbox
+    params: { ux: terminal, identity: work }
+
+stow:
+  target: ~
+  subdir: home
+
+packages:
+  managers: [dnf]
+
+layers:
+  ux/desktop:
+    copr: [owner/desktop-shell]

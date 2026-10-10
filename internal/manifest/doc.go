@@ -2,8 +2,13 @@
 // contrato entre el motor y el contenido.
 //
 // Responsabilidad: leer dots.yaml, validarlo y exponer un modelo tipado
-// (perfiles, capas de stow, paquetes, system, hooks, externals) al resto del
-// motor. Es lógica pura y sin efectos: no toca el disco salvo por Load, que solo
-// lee. La resolución de capas por perfil (ResolvedLayers) también vive aquí por
-// ser una operación puramente derivada del manifiesto.
+// (perfiles, dimensiones, paquetes, hooks y lo que declara cada capa) al resto
+// del motor. Es lógica pura y sin efectos: no toca el disco salvo por Load, que
+// lee el fichero y comprueba que existen las carpetas de las capas
+// (ValidateLayout).
+//
+// También vive aquí la resolución de la pila de capas de un perfil (Stack:
+// shared, una capa por dimensión y la máquina) y la unión de lo que declaran
+// esas capas (COPR, Externals, SystemFiles), por ser operaciones puramente
+// derivadas del manifiesto.
 package manifest

@@ -23,8 +23,8 @@ func applyHook(m *manifest.Manifest, contentDir, profile, point string) error {
 		Profile:    profile,
 		ContentDir: contentDir,
 		Target:     target,
-		Layers:     m.ResolvedLayers(profile),
-		HooksDir:   m.Hooks.Dir,
+		Layers:     m.Stack(profile),
+		HooksDir:   manifest.HooksDir,
 	}
 	return hooks.Run(point, ctx, dryRun, func(s string) {
 		fmt.Println("  " + s)

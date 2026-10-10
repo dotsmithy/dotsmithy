@@ -14,24 +14,32 @@ fail() {
 dnf install -y git-core >/dev/null
 
 C=/tmp/content
-mkdir -p "$C/shared/packages" "$C/hooks/post-link" "$C/hooks/post-init" "$C/hooks/externals" "$C/system"
+# Capas: shared, una dimensión (ux/terminal) y la máquina. El system vive en la
+# capa de la máquina y el external en la de la dimensión, para comprobar que lo
+# declarado por capa se resuelve relativo a su carpeta.
+mkdir -p "$C/shared/packages" "$C/hooks/post-link" "$C/hooks/post-init" \
+	"$C/ux/terminal/scripts" "$C/machines/minipc/system"
 cat >"$C/dots.yaml" <<'EOF'
-version: 1
-profiles: { minipc: { description: "integración" } }
-stow: { layers: [shared, "machines/{profile}"] }
+version: 2
+dimensions: [ux]
+profiles:
+  minipc: { description: "integración", machine: minipc, params: { ux: terminal } }
 packages: { managers: [dnf] }
 hooks: { points: [post-link, post-packages, post-init] }
-system:
-  - { src: system/dotsmithy.conf, dest: /etc/dotsmithy.conf, type: copy, mode: "0644", validate: "grep -q hola {file}" }
-  - { src: system/dots.link, dest: /etc/dotsmithy.link, type: symlink }
-externals:
-  - { dest: /tmp/ext-dest, type: git, repo: /tmp/ext-remote, ref: main, post: hooks/externals/10-post.sh }
+layers:
+  ux/terminal:
+    externals:
+      - { dest: /tmp/ext-dest, type: git, repo: /tmp/ext-remote, ref: main, post: scripts/10-post.sh }
+  machines/minipc:
+    system:
+      - { src: system/dotsmithy.conf, dest: /etc/dotsmithy.conf, type: copy, mode: "0644", validate: "grep -q hola {file}" }
+      - { src: system/dots.link, dest: /etc/dotsmithy.link, type: symlink }
 EOF
 # Un paquete pequeño y con pocas dependencias.
 echo tree >"$C/shared/packages/dnf.txt"
 # Ficheros de sistema de prueba (copy con validación + symlink).
-echo "hola=mundo" >"$C/system/dotsmithy.conf"
-echo "soy un target de symlink" >"$C/system/dots.link"
+echo "hola=mundo" >"$C/machines/minipc/system/dotsmithy.conf"
+echo "soy un target de symlink" >"$C/machines/minipc/system/dots.link"
 # Hooks que dejan un rastro para comprobar que se dispararon (el heredoc con
 # 'EOF' entrecomillado escribe las variables literales, sin expandirlas ahora).
 cat >"$C/hooks/post-link/10-marker.sh" <<'EOF'
@@ -41,7 +49,7 @@ cat >"$C/hooks/post-init/10-once.sh" <<'EOF'
 touch "$DOTS_TARGET/.dots-postinit"
 EOF
 # Post del external: deja un rastro con el destino recibido.
-cat >"$C/hooks/externals/10-post.sh" <<'EOF'
+cat >"$C/ux/terminal/scripts/10-post.sh" <<'EOF'
 echo "$DOTS_EXTERNAL_DEST" > "$DOTS_TARGET/.ext-post"
 EOF
 

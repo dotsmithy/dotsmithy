@@ -51,23 +51,25 @@ Perfil y contenido se resuelven como en link: flags o el estado local.`,
 // runExternals procesa la fase de externals y devuelve cuántos fallaron. Imprime
 // un resumen. Lo comparten init, update y el comando suelto.
 func runExternals(m *manifest.Manifest, contentDir, profile string) int {
-	if len(m.Externals) == 0 {
+	stack := m.Stack(profile)
+	exts := m.Externals(stack)
+	if len(exts) == 0 {
 		return 0
 	}
 	target, err := stow.ExpandTarget(m.Stow.Target)
 	if err != nil {
 		// No debería pasar; si pasa, lo tratamos como fallo de la fase.
 		fmt.Printf("· externals: no he podido resolver el destino base: %v\n", err)
-		return len(m.Externals)
+		return len(exts)
 	}
-	fmt.Printf("· externals: %d recurso(s)…\n", len(m.Externals))
+	fmt.Printf("· externals: %d recurso(s)…\n", len(exts))
 	ctx := externals.Context{
 		Profile:    profile,
 		ContentDir: contentDir,
 		Target:     target,
-		Layers:     m.ResolvedLayers(profile),
+		Layers:     stack,
 	}
-	failed := externals.Apply(m.Externals, ctx, dryRun, func(s string) {
+	failed := externals.Apply(exts, ctx, dryRun, func(s string) {
 		fmt.Println("  " + s)
 	})
 	if failed > 0 {

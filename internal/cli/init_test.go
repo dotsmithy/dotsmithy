@@ -13,8 +13,12 @@ import (
 func writeMinimalContent(t *testing.T) string {
 	t.Helper()
 	content := t.TempDir()
-	manifest := "version: 1\nprofiles: { minipc: { description: t } }\nstow: { layers: [shared] }\n"
+	manifest := "version: 2\nprofiles: { minipc: { description: t, machine: minipc } }\n"
 	if err := os.WriteFile(filepath.Join(content, "dots.yaml"), []byte(manifest), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// La capa de la máquina tiene que existir aunque esté vacía.
+	if err := os.MkdirAll(filepath.Join(content, "machines", "minipc"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	home := filepath.Join(content, "shared", "home")
