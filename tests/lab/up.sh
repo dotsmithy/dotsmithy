@@ -15,13 +15,19 @@
 #     y cómo tirarlo.
 #
 # Necesita podman en el host: el arranque con systemd se apoya en
-# `podman run --systemd=always`, que en docker no existe tal cual.
+# `podman run --systemd=always`, que en docker no existe tal cual. Por defecto va
+# rootless; con LAB_PODMAN se cambia el comando (el workflow usa "sudo podman",
+# porque el podman rootless de los runners de Ubuntu no deja leer /etc/shadow a
+# sudo ni da red al contenedor como hace falta).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 readonly IMAGE="dotsmithy-lab:latest"
 readonly NAME="${LAB_NAME:-dotsmithy-lab}"
+
+# Comando de podman a usar, troceado en palabras (p.ej. "sudo podman").
+read -r -a PODMAN <<<"${LAB_PODMAN:-podman}"
 
 if ! command -v podman >/dev/null 2>&1; then
 	echo "Necesito podman en el sistema para el lab (arranca Fedora con systemd) y no lo encuentro." >&2
@@ -31,7 +37,7 @@ fi
 # lab_exec ejecuta un comando dentro del lab como el usuario "lab", con shell de
 # login (para que tenga el PATH y el entorno de una sesión normal).
 lab_exec() {
-	podman exec -u lab -w /home/lab "$NAME" bash -lc "$1"
+	"${PODMAN[@]}" exec -u lab -w /home/lab "$NAME" bash -lc "$1"
 }
 
 echo ">> compilando el motor (linux/amd64, estático)…"
@@ -42,11 +48,18 @@ echo ">> compilando el motor (linux/amd64, estático)…"
 )
 
 echo ">> construyendo la imagen del lab…"
-podman build -q -t "$IMAGE" "$HERE" >/dev/null 2>&1
+# La salida del build es muy ruidosa (scriptlets de dnf): solo la enseñamos si falla.
+build_log="$(mktemp)"
+if ! "${PODMAN[@]}" build -t "$IMAGE" "$HERE" >"$build_log" 2>&1; then
+	tail -40 "$build_log" >&2
+	echo "no he podido construir la imagen del lab (arriba, el final del build)." >&2
+	exit 1
+fi
+rm -f "$build_log"
 
 echo ">> arrancando Fedora con systemd…"
-podman rm -f "$NAME" >/dev/null 2>&1 || true
-podman run -d --name "$NAME" --systemd=always "$IMAGE" >/dev/null
+"${PODMAN[@]}" rm -f "$NAME" >/dev/null 2>&1 || true
+"${PODMAN[@]}" run -d --name "$NAME" --systemd=always "$IMAGE" >/dev/null
 
 # Esperamos a que systemd termine de arrancar. Recién lanzado el contenedor puede
 # que aún no responda (bus sin levantar), así que reintentamos un rato en vez de
@@ -54,7 +67,7 @@ podman run -d --name "$NAME" --systemd=always "$IMAGE" >/dev/null
 # que no pintan nada ahí y fallan): eso también vale.
 state=""
 for _ in $(seq 1 45); do
-	state="$(podman exec "$NAME" systemctl is-system-running 2>&1 || true)"
+	state="$("${PODMAN[@]}" exec "$NAME" systemctl is-system-running 2>&1 || true)"
 	case "$state" in running | degraded) break ;; esac
 	sleep 2
 done
@@ -64,11 +77,11 @@ running | degraded) echo ">> systemd listo (estado: $state)" ;;
 	# Volcamos todo lo que ayude a ver qué ha pasado.
 	echo "systemd no ha arrancado bien dentro del lab (última respuesta: '${state:-nada}')." >&2
 	echo "--- estado del contenedor:" >&2
-	podman ps -a --filter "name=$NAME" --format '{{.Status}}' >&2 || true
+	"${PODMAN[@]}" ps -a --filter "name=$NAME" --format '{{.Status}}' >&2 || true
 	echo "--- PID 1 dentro:" >&2
-	podman exec "$NAME" ps -p 1 -o comm= >&2 || true
+	"${PODMAN[@]}" exec "$NAME" ps -p 1 -o comm= >&2 || true
 	echo "--- logs del contenedor:" >&2
-	podman logs "$NAME" 2>&1 | tail -30 >&2 || true
+	"${PODMAN[@]}" logs "$NAME" 2>&1 | tail -30 >&2 || true
 	exit 1
 	;;
 esac
@@ -80,15 +93,15 @@ if [ "${LAB_TMATE:-}" != "1" ]; then
 	cat <<MSG
 =================== LAB LISTO ===================
 Fedora con systemd y dots aplicado, usuario "lab" (sudo sin contraseña).
-  Entrar:  podman exec -it -u lab -w /home/lab $NAME bash -l
-  Tirarlo: podman rm -f $NAME
+  Entrar:  ${PODMAN[*]} exec -it -u lab -w /home/lab $NAME bash -l
+  Tirarlo: ${PODMAN[*]} rm -f $NAME
 ================================================
 MSG
 	exit 0
 fi
 
 # Modo workflow: el contenedor se borra al salir pase lo que pase.
-trap 'podman rm -f "$NAME" >/dev/null 2>&1 || true' EXIT
+trap '"${PODMAN[@]}" rm -f "$NAME" >/dev/null 2>&1 || true' EXIT
 
 echo ">> abriendo sesión SSH (tmate)…"
 # Si tmate no llega a su servidor, `wait tmate-ready` espera para siempre y el job
@@ -104,5 +117,5 @@ echo "Entras como el usuario lab (sudo sin contraseña) en una Fedora con system
 echo "Prueba: ds --help, systemctl status, ls -la ~"
 echo "Para cerrar el lab antes de tiempo: touch /tmp/close-lab"
 echo "================================================"
-until podman exec "$NAME" test -e /tmp/close-lab; do sleep 10; done
+until "${PODMAN[@]}" exec "$NAME" test -e /tmp/close-lab; do sleep 10; done
 echo ">> cierre solicitado, saliendo."

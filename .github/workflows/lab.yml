@@ -31,4 +31,7 @@ jobs:
       - name: levantar Fedora con systemd, aplicar y abrir SSH (tmate)
         env:
           LAB_TMATE: "1"
+          # Podman como root: el rootless del runner no deja a sudo leer
+          # /etc/shadow dentro del contenedor y no le da la red que necesita tmate.
+          LAB_PODMAN: sudo podman
         run: ./tests/lab/up.sh
