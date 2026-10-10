@@ -20,6 +20,7 @@ func newExternalsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "externals",
 		Short: "trae y prepara los recursos externos declarados",
+		Args:  noArgs,
 		Long: `externals baja los recursos externos que declaras (repos git o ficheros)
 a su destino y ejecuta su post cuando los trae o cuando cambian. Va en modo
 best-effort: si alguno falla, te avisa y sigue con el resto.

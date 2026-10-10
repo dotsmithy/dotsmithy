@@ -18,6 +18,7 @@ func newSyncCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "informa de qué paquetes declarados faltan por instalar (solo lectura)",
+		Args:  noArgs,
 		Long: `sync mira los paquetes que declaras (unión de las capas activas) y los
 compara con lo que hay instalado, contándote qué falta. De momento es solo
 lectura: no instala nada (eso vendrá con add/instalación).

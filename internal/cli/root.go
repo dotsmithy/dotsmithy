@@ -42,6 +42,12 @@ dots.yaml.`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Version:       version,
+	// Un argumento suelto en la raíz es un comando que no existe: lo decimos en
+	// castellano (y sugerimos el parecido). Sin argumentos, enseña la ayuda.
+	Args: subcommandArgs,
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		return cmd.Help()
+	},
 }
 
 // Execute arranca la CLI. Es el único símbolo que main necesita.
@@ -70,6 +76,10 @@ func init() {
 		newSyncCmd(),
 		newExternalsCmd(),
 	)
+
+	// Textos de cobra/pflag en castellano (plantilla de uso, errores de flags,
+	// help, completion…). Va después de registrar los subcomandos.
+	localize(rootCmd)
 }
 
 // notImplemented es el cuerpo compartido de los stubs de F0: avisa, en tono
