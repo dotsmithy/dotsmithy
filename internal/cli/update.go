@@ -20,6 +20,7 @@ func newUpdateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "trae los cambios del contenido y los aplica",
+		Args:  noArgs,
 		Long: `update hace pull de tu repo de contenido y vuelve a aplicar: enlaza lo
 nuevo (link + post-link), sincroniza paquetes (+ post-packages) y deja todo al
 día. No ejecuta post-init (eso es del primer init).

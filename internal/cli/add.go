@@ -23,7 +23,7 @@ lista de una capa del contenido (por defecto «shared», usa --layer para otra) 
 los instala. Deja el alta declarada en el repo y aplicada en la máquina.
 
 Ejemplo: dots add dnf ripgrep fzf`,
-		Args: cobra.MinimumNArgs(2),
+		Args: minArgs(2),
 		RunE: func(_ *cobra.Command, args []string) error {
 			mgrName, pkgs := args[0], args[1:]
 

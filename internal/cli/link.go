@@ -23,6 +23,7 @@ func newLinkCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "link",
 		Short: "despliega los dotfiles a $HOME (symlinks, modelo Stow)",
+		Args:  noArgs,
 		Long: `link resuelve las capas (shared + perfil de máquina) y crea los symlinks
 en tu $HOME apuntando a los ficheros reales del repo. Es idempotente: si ya
 está enlazado, no hace nada; si falta, lo crea. Con --dry-run enseña el plan

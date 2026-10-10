@@ -27,6 +27,7 @@ func newInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "arranca una máquina desde cero (perfil, contenido, estado, aplica)",
+		Args:  noArgs,
 		Long: `init deja una máquina lista: elige el perfil, consigue tu repo de contenido
 (clonándolo desde --remote por SSH, o usando el de --content si ya lo tienes en
 local), guarda el estado local y aplica todo (link).
