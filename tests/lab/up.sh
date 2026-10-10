@@ -42,21 +42,33 @@ echo ">> compilando el motor (linux/amd64, estático)…"
 )
 
 echo ">> construyendo la imagen del lab…"
-podman build -q -t "$IMAGE" "$HERE" >/dev/null
+podman build -q -t "$IMAGE" "$HERE" >/dev/null 2>&1
 
 echo ">> arrancando Fedora con systemd…"
 podman rm -f "$NAME" >/dev/null 2>&1 || true
 podman run -d --name "$NAME" --systemd=always "$IMAGE" >/dev/null
 
-# En un contenedor lo normal es "degraded" (hay unidades que no pintan nada ahí y
-# fallan), así que no miramos el código de salida, solo que haya terminado de
-# arrancar. Si systemd no fuera el PID 1, esto fallaría y lo cantamos.
-state="$(podman exec "$NAME" systemctl is-system-running --wait 2>/dev/null || true)"
+# Esperamos a que systemd termine de arrancar. Recién lanzado el contenedor puede
+# que aún no responda (bus sin levantar), así que reintentamos un rato en vez de
+# rendirnos a la primera. En un contenedor lo normal es "degraded" (hay unidades
+# que no pintan nada ahí y fallan): eso también vale.
+state=""
+for _ in $(seq 1 45); do
+	state="$(podman exec "$NAME" systemctl is-system-running 2>&1 || true)"
+	case "$state" in running | degraded) break ;; esac
+	sleep 2
+done
 case "$state" in
 running | degraded) echo ">> systemd listo (estado: $state)" ;;
 *)
-	echo "systemd no ha arrancado bien dentro del lab (estado: '${state:-desconocido}')." >&2
-	podman logs "$NAME" 2>&1 | tail -20 >&2
+	# Volcamos todo lo que ayude a ver qué ha pasado.
+	echo "systemd no ha arrancado bien dentro del lab (última respuesta: '${state:-nada}')." >&2
+	echo "--- estado del contenedor:" >&2
+	podman ps -a --filter "name=$NAME" --format '{{.Status}}' >&2 || true
+	echo "--- PID 1 dentro:" >&2
+	podman exec "$NAME" ps -p 1 -o comm= >&2 || true
+	echo "--- logs del contenedor:" >&2
+	podman logs "$NAME" 2>&1 | tail -30 >&2 || true
 	exit 1
 	;;
 esac
