@@ -139,6 +139,34 @@ func TestApplyRunsPostOnChangeOnly(t *testing.T) {
 	}
 }
 
+func TestPostGetsHookContract(t *testing.T) {
+	// El post recibe el mismo contrato de entorno que los hooks (máquina y
+	// params incluidos), más DOTS_EXTERNAL_DEST.
+	remote := makeRemote(t, "a.txt", "uno\n")
+	content, target := t.TempDir(), t.TempDir()
+	post := `echo "$DOTS_HOOK $DOTS_MACHINE $DOTS_PARAM_UX $(basename "$DOTS_EXTERNAL_DEST")" > "$DOTS_TARGET/env.txt"` + "\n"
+	if err := os.WriteFile(filepath.Join(content, "post.sh"), []byte(post), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dest := filepath.Join(t.TempDir(), "dest")
+	ext := manifest.External{Dest: dest, Type: "git", Repo: remote, Ref: "main", Post: "post.sh"}
+	ctx := Context{
+		Profile:    "devbox",
+		Machine:    "devbox",
+		Params:     map[string]string{"ux": "terminal"},
+		ContentDir: content,
+		Target:     target,
+		Layers:     []string{"shared"},
+	}
+	if failed := Apply([]manifest.External{ext}, ctx, false, nil); failed != 0 {
+		t.Fatalf("no esperaba fallos, hubo %d", failed)
+	}
+	got, _ := os.ReadFile(filepath.Join(target, "env.txt"))
+	if want := "externals devbox terminal dest\n"; string(got) != want {
+		t.Errorf("contrato del post: quiero %q, tengo %q", want, string(got))
+	}
+}
+
 func TestApplyBestEffort(t *testing.T) {
 	// Un external roto (repo inexistente) y uno bueno (file). El bueno se aplica
 	// y el roto solo cuenta como fallo.

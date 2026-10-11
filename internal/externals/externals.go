@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.kreikol.dev/dotsmithy/internal/hooks"
 	"go.kreikol.dev/dotsmithy/internal/manifest"
 	"go.kreikol.dev/dotsmithy/internal/stow"
 )
@@ -18,14 +19,10 @@ import (
 // httpClient con timeout para las descargas de externals de tipo file.
 var httpClient = &http.Client{Timeout: 60 * time.Second}
 
-// Context es el contexto que se pasa al post de cada external (mismo contrato
-// que los hooks, más DOTS_EXTERNAL_DEST por external).
-type Context struct {
-	Profile    string
-	ContentDir string
-	Target     string
-	Layers     []string
-}
+// Context es el contexto que se pasa al post de cada external: el mismo que el
+// de los hooks (mismo contrato de variables de entorno), más DOTS_EXTERNAL_DEST
+// por external.
+type Context = hooks.Context
 
 // Apply procesa todos los externals en modo best-effort: por cada uno hace el
 // fetch y, si es nuevo o ha cambiado, ejecuta su post. Si uno falla (fetch o
@@ -189,14 +186,8 @@ func runPost(ext manifest.External, ctx Context, dest string) error {
 	script := filepath.Join(ctx.ContentDir, ext.Post)
 	cmd := exec.Command("bash", script)
 	cmd.Dir = ctx.ContentDir
-	cmd.Env = append(os.Environ(),
-		"DOTS_HOOK=externals",
-		"DOTS_PROFILE="+ctx.Profile,
-		"DOTS_CONTENT_DIR="+ctx.ContentDir,
-		"DOTS_TARGET="+ctx.Target,
-		"DOTS_LAYERS="+strings.Join(ctx.Layers, " "),
-		"DOTS_EXTERNAL_DEST="+dest,
-	)
+	cmd.Env = append(os.Environ(), ctx.Env("externals")...)
+	cmd.Env = append(cmd.Env, "DOTS_EXTERNAL_DEST="+dest)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

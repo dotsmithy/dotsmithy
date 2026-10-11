@@ -9,8 +9,7 @@ import (
 )
 
 // applyHook ejecuta los hooks de un punto, si el manifiesto lo declara activo.
-// Arma el contexto (perfil, contenido, destino expandido, capas) y respeta
-// --dry-run. Lo usan init y update.
+// Los busca en cada capa de la pila (ver hooks.Run) y respeta --dry-run. Lo usan init y update.
 func applyHook(m *manifest.Manifest, contentDir, profile, point string) error {
 	if !hookEnabled(m, point) {
 		return nil
@@ -19,16 +18,24 @@ func applyHook(m *manifest.Manifest, contentDir, profile, point string) error {
 	if err != nil {
 		return err
 	}
-	ctx := hooks.Context{
+	return hooks.Run(point, hookContext(m, contentDir, profile, target), dryRun, func(s string) {
+		fmt.Println("  " + s)
+	})
+}
+
+// hookContext arma el contexto que reciben los hooks y el post de los externals
+// (perfil, máquina, params, contenido, destino expandido y pila de capas).
+func hookContext(m *manifest.Manifest, contentDir, profile, target string) hooks.Context {
+	p := m.Profiles[profile]
+	return hooks.Context{
 		Profile:    profile,
+		Machine:    p.Machine,
+		Params:     p.Params,
 		ContentDir: contentDir,
 		Target:     target,
 		Layers:     m.Stack(profile),
 		HooksDir:   manifest.HooksDir,
 	}
-	return hooks.Run(point, ctx, dryRun, func(s string) {
-		fmt.Println("  " + s)
-	})
 }
 
 // hookEnabled indica si el manifiesto declara activo un punto de hook.

@@ -17,7 +17,7 @@ C=/tmp/content
 # Capas: shared, una dimensión (ux/terminal) y la máquina. El system vive en la
 # capa de la máquina y el external en la de la dimensión, para comprobar que lo
 # declarado por capa se resuelve relativo a su carpeta.
-mkdir -p "$C/shared/packages" "$C/hooks/post-link" "$C/hooks/post-init" \
+mkdir -p "$C/shared/packages" "$C/shared/hooks/post-link" "$C/shared/hooks/post-init" \
 	"$C/ux/terminal/scripts" "$C/machines/minipc/system"
 cat >"$C/dots.yaml" <<'EOF'
 version: 2
@@ -42,10 +42,10 @@ echo "hola=mundo" >"$C/machines/minipc/system/dotsmithy.conf"
 echo "soy un target de symlink" >"$C/machines/minipc/system/dots.link"
 # Hooks que dejan un rastro para comprobar que se dispararon (el heredoc con
 # 'EOF' entrecomillado escribe las variables literales, sin expandirlas ahora).
-cat >"$C/hooks/post-link/10-marker.sh" <<'EOF'
+cat >"$C/shared/hooks/post-link/10-marker.sh" <<'EOF'
 echo "$DOTS_PROFILE" > "$DOTS_TARGET/.dots-postlink"
 EOF
-cat >"$C/hooks/post-init/10-once.sh" <<'EOF'
+cat >"$C/shared/hooks/post-init/10-once.sh" <<'EOF'
 touch "$DOTS_TARGET/.dots-postinit"
 EOF
 # Post del external: deja un rastro con el destino recibido.

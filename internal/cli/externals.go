@@ -51,8 +51,7 @@ Perfil y contenido se resuelven como en link: flags o el estado local.`,
 // runExternals procesa la fase de externals y devuelve cuántos fallaron. Imprime
 // un resumen. Lo comparten init, update y el comando suelto.
 func runExternals(m *manifest.Manifest, contentDir, profile string) int {
-	stack := m.Stack(profile)
-	exts := m.Externals(stack)
+	exts := m.Externals(m.Stack(profile))
 	if len(exts) == 0 {
 		return 0
 	}
@@ -63,13 +62,7 @@ func runExternals(m *manifest.Manifest, contentDir, profile string) int {
 		return len(exts)
 	}
 	fmt.Printf("· externals: %d recurso(s)…\n", len(exts))
-	ctx := externals.Context{
-		Profile:    profile,
-		ContentDir: contentDir,
-		Target:     target,
-		Layers:     stack,
-	}
-	failed := externals.Apply(exts, ctx, dryRun, func(s string) {
+	failed := externals.Apply(exts, hookContext(m, contentDir, profile, target), dryRun, func(s string) {
 		fmt.Println("  " + s)
 	})
 	if failed > 0 {

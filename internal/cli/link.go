@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -105,7 +106,19 @@ func loadManifestForProfile(contentDir, profile string) (*manifest.Manifest, err
 		return nil, fmt.Errorf("el perfil %q no está en el manifiesto (tienes: %s)",
 			profile, strings.Join(profileNames(m), ", "))
 	}
+	warnRootHooks(contentDir)
 	return m, nil
+}
+
+// warnRootHooks avisa si el contenido aún tiene hooks en la raíz (hooks/), donde
+// vivían antes de que fueran por capa. El motor ya no los ejecuta, y que se
+// queden sin correr en silencio sería peor que avisar.
+func warnRootHooks(contentDir string) {
+	dir := filepath.Join(contentDir, manifest.HooksDir)
+	if info, err := os.Stat(dir); err == nil && info.IsDir() {
+		fmt.Fprintf(os.Stderr, "ojo: tienes hooks en %s, pero ahora los hooks van por capa (<capa>/%s/<punto>/). Los de la raíz no se ejecutan: muévelos a la capa que toque (shared si son para todas).\n",
+			dir, manifest.HooksDir)
+	}
 }
 
 // applyStow construye el plan de symlinks del perfil y lo aplica (respetando los

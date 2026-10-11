@@ -13,8 +13,9 @@ import (
 // modeRe valida un modo octal de 3 o 4 dígitos (ej. "644", "0440").
 var modeRe = regexp.MustCompile(`^[0-7]{3,4}$`)
 
-// reservedNames son nombres de carpeta que usa el motor en la raíz del
-// contenido, así que no pueden ser el nombre de una dimensión.
+// reservedNames son nombres de carpeta que el motor usa con un significado
+// propio (las capas de las puntas y la carpeta de hooks de cada capa), así que no
+// pueden ser el nombre de una dimensión.
 var reservedNames = []string{SharedLayer, MachinesDir, HooksDir}
 
 // problems acumula las pegas de una validación para devolverlas todas juntas.
