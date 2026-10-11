@@ -2,7 +2,8 @@
 #
 # Integración de paquetes: se ejecuta DENTRO del contenedor Fedora (como root).
 # Comprueba el "hecho cuando" de F1 en la parte de paquetes: que init deja los
-# paquetes declarados instalados (idempotente) y que add registra + instala.
+# paquetes declarados instalados (idempotente) y que add registra + instala
+# en la capa que toca.
 set -euo pipefail
 
 fail() {
@@ -87,10 +88,18 @@ echo ">> init es idempotente (segunda pasada: al día)"
 out="$(dots init --profile minipc --content "$C")"
 grep -q "al día" <<<"$out" || fail "la segunda pasada de init debería decir «al día»"
 
-echo ">> add registra e instala un paquete nuevo"
+echo ">> add registra (por defecto en la máquina del perfil activo) e instala"
 dots add dnf jq --content "$C"
 rpm -q jq >/dev/null 2>&1 || fail "jq no quedó instalado tras add"
-grep -qx jq "$C/shared/packages/dnf.txt" || fail "jq no quedó registrado en la lista"
+grep -qx jq "$C/machines/minipc/packages/dnf.txt" || fail "jq no quedó registrado en la capa de la máquina"
+if grep -qx jq "$C/shared/packages/dnf.txt"; then fail "jq NO debería ir a shared sin --layer"; fi
+
+echo ">> add --layer registra en otra capa del perfil, y rechaza las ajenas"
+dots add dnf jq --content "$C" --layer shared
+grep -qx jq "$C/shared/packages/dnf.txt" || fail "con --layer shared, jq debería ir a shared"
+if dots add dnf jq --content "$C" --layer ux/desktop 2>/dev/null; then
+	fail "add debería rechazar una capa que no es del perfil activo"
+fi
 
 echo ">> link --backup respalda un dotfile preexistente (.bashrc de la imagen)"
 if [ ! -f "$HOME/.bashrc" ] || [ -L "$HOME/.bashrc" ]; then fail "esperaba un .bashrc REAL de base"; fi

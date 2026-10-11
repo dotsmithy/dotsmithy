@@ -20,6 +20,17 @@ contrato entre ambos es un manifiesto declarativo, `dots.yaml`.
 Es el patrón librería/SDK + aplicación: el motor es la pieza reutilizable; el
 contenido, tu instancia.
 
+## Perfiles compuestos
+
+Cada máquina se aplica con un **perfil**, que es una pila de capas: una común
+(`shared`), una por cada dimensión que declare tu contenido (por ejemplo, con
+escritorio o solo terminal; identidad personal o de trabajo) y la de la máquina
+(`machines/<máquina>`). Dotfiles, paquetes, hooks, repos COPR, externals y
+ficheros de sistema se reparten por capa, y cada máquina recibe solo lo de las
+suyas.
+
+El esquema completo de `dots.yaml` está en [docs/manifiesto.md](docs/manifiesto.md).
+
 ## Instalación (bootstrap)
 
 En una máquina limpia, una sola línea baja el motor y cede el control a `dots init`:
@@ -37,7 +48,7 @@ El instalador deja el mando `dots` (y su atajo `ds`) a mano.
 | `dots init`      | Arranca una máquina desde cero (clave SSH, perfil, clon, aplica) |
 | `dots link`      | Despliega los dotfiles a `$HOME` (symlinks, modelo Stow)        |
 | `dots update`    | Trae los cambios del contenido y los aplica                     |
-| `dots add`       | Adopta un fichero de `$HOME` al repo de contenido               |
+| `dots add`       | Registra paquetes en una capa del contenido y los instala       |
 | `dots sync`      | Concilia los paquetes con lo declarado (o informa del drift)    |
 | `dots externals` | Trae y prepara los recursos externos declarados                 |
 
