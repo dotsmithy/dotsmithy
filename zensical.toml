@@ -58,22 +58,21 @@ features = [
   "search.highlight",
 ]
 
-# Claro y oscuro, con el naranja de forja del banner como color principal.
+# Oscuro por defecto (el primero de la lista), con botón para pasar a claro, y el
+# naranja de forja del banner como color principal.
 [[project.theme.palette]]
-media = "(prefers-color-scheme: light)"
-scheme = "default"
-primary = "custom"
-accent = "custom"
-toggle.icon = "lucide/moon"
-toggle.name = "Cambiar a modo oscuro"
-
-[[project.theme.palette]]
-media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 primary = "custom"
 accent = "custom"
 toggle.icon = "lucide/sun"
 toggle.name = "Cambiar a modo claro"
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "custom"
+accent = "custom"
+toggle.icon = "lucide/moon"
+toggle.name = "Cambiar a modo oscuro"
 
 [project.markdown_extensions]
 admonition = {}
