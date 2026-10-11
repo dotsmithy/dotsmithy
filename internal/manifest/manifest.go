@@ -12,9 +12,10 @@ import (
 
 // SchemaVersion es la única versión de esquema que este motor entiende. Si el
 // manifiesto declara otra, se rechaza (evita aplicar un contenido pensado para
-// otro motor). La 2 introduce los perfiles compuestos (capa común, dimensiones
-// del contenido y máquina); la 1 ya no se acepta.
-const SchemaVersion = 2
+// otro motor). La 1 es el primer esquema estable, el de los perfiles compuestos
+// (capa común, dimensiones del contenido y máquina). El esquema de las alphas
+// previas a la v1.0 era un borrador y no se acepta.
+const SchemaVersion = 1
 
 // Capas que pone el motor en las dos puntas de la pila. Sus nombres de carpeta
 // son fijos: cualquier contenido tiene algo común y algo propio de cada máquina.
