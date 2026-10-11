@@ -21,7 +21,7 @@ mkdir -p "$C/shared/home" "$C/shared/hooks/post-link" \
 	"$C/machines/pc" \
 	"$C/hooks/post-link"
 cat >"$C/dots.yaml" <<'EOF'
-version: 2
+version: 1
 dimensions: [ux]
 profiles:
   remote: { description: "sin escritorio", machine: vm, params: { ux: terminal } }

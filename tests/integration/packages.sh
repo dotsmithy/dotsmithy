@@ -21,7 +21,7 @@ C=/tmp/content
 mkdir -p "$C/shared/packages" "$C/shared/hooks/post-link" "$C/shared/hooks/post-init" \
 	"$C/ux/terminal/scripts" "$C/machines/minipc/system"
 cat >"$C/dots.yaml" <<'EOF'
-version: 2
+version: 1
 dimensions: [ux]
 profiles:
   minipc: { description: "integración", machine: minipc, params: { ux: terminal } }

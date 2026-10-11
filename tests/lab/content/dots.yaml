@@ -1,4 +1,4 @@
-version: 2
+version: 1
 profiles: { minipc: { description: "lab", machine: minipc } }
 packages: { managers: [dnf] }
 hooks: { points: [post-link, post-packages, post-init] }

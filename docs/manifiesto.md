@@ -5,7 +5,7 @@ el motor y tus ficheros. Dice qué perfiles hay, cómo se compone cada uno y lo 
 que no se puede expresar con ficheros (repos COPR, recursos externos, ficheros de
 sistema). Todo lo demás se saca de las carpetas.
 
-Esta página describe la **versión 2** del esquema. El motor solo entiende esa: un
+Esta página describe la **versión 1** del esquema. El motor solo entiende esa: un
 manifiesto con otra `version` se rechaza.
 
 ## La idea: perfiles compuestos
@@ -33,7 +33,7 @@ de ningún sitio.
 ## Ejemplo completo
 
 ```yaml
-version: 2
+version: 1
 
 dimensions: [ux, identity]
 
@@ -103,7 +103,7 @@ machines/
 
 ### `version`
 
-Obligatorio, y tiene que ser `2`.
+Obligatorio, y tiene que ser `1`.
 
 ### `dimensions`
 
@@ -248,7 +248,7 @@ instalaría nada aquí, así que se rechaza.
 Al cargar el manifiesto, el motor comprueba todo esto y, si algo falla, enseña
 todas las pegas de una vez:
 
-- `version` es `2` y no hay campos desconocidos (una errata en un nombre de campo
+- `version` es `1` y no hay campos desconocidos (una errata en un nombre de campo
   es un error, no se ignora).
 - Las dimensiones no se repiten ni usan nombres reservados.
 - Cada perfil tiene `machine` y sus `params` cubren exactamente las dimensiones.

@@ -10,7 +10,7 @@ import (
 
 // fullValid es un manifiesto válido que ejercita todas las secciones.
 const fullValid = `
-version: 2
+version: 1
 dimensions: [ux, identity]
 profiles:
   desk:
@@ -70,8 +70,8 @@ func mustParse(t *testing.T, yaml string) *Manifest {
 
 func TestParseValidFull(t *testing.T) {
 	m := mustParse(t, fullValid)
-	if m.Version != 2 {
-		t.Errorf("version: quiero 2, tengo %d", m.Version)
+	if m.Version != 1 {
+		t.Errorf("version: quiero 1, tengo %d", m.Version)
 	}
 	if !reflect.DeepEqual(m.Dimensions, []string{"ux", "identity"}) {
 		t.Errorf("dimensions: tengo %v", m.Dimensions)
@@ -91,7 +91,7 @@ func TestParseValidFull(t *testing.T) {
 func TestDefaultsApplied(t *testing.T) {
 	// Manifiesto mínimo: sin dimensiones y con un único perfil.
 	const minimal = `
-version: 2
+version: 1
 profiles:
   desk: { machine: desk }
 `
@@ -122,7 +122,7 @@ func TestStack(t *testing.T) {
 }
 
 func TestStackWithoutDimensions(t *testing.T) {
-	m := mustParse(t, "version: 2\nprofiles:\n  desk: { machine: desk }\n")
+	m := mustParse(t, "version: 1\nprofiles:\n  desk: { machine: desk }\n")
 	want := []string{"shared", "machines/desk"}
 	if got := m.Stack("desk"); !reflect.DeepEqual(got, want) {
 		t.Errorf("pila sin dimensiones: quiero %v, tengo %v", want, got)
@@ -191,12 +191,12 @@ func TestHasManager(t *testing.T) {
 
 func TestParseUnknownFieldFails(t *testing.T) {
 	// Una errata en un campo (typo) debe fallar, no ignorarse. Incluye los
-	// campos de la versión 1 que ya no existen.
+	// campos del esquema antiguo (el de la alpha) que ya no existen.
 	for name, yaml := range map[string]string{
-		"errata":          "version: 2\nprofiles:\n  d: { machine: d }\nstow:\n  targett: ~\n",
-		"stow.layers":     "version: 2\nprofiles:\n  d: { machine: d }\nstow:\n  layers: [shared]\n",
-		"externals raíz":  "version: 2\nprofiles:\n  d: { machine: d }\nexternals: []\n",
-		"campo en perfil": "version: 2\nprofiles:\n  d: { machine: d, ux: desktop }\n",
+		"errata":          "version: 1\nprofiles:\n  d: { machine: d }\nstow:\n  targett: ~\n",
+		"stow.layers":     "version: 1\nprofiles:\n  d: { machine: d }\nstow:\n  layers: [shared]\n",
+		"externals raíz":  "version: 1\nprofiles:\n  d: { machine: d }\nexternals: []\n",
+		"campo en perfil": "version: 1\nprofiles:\n  d: { machine: d, ux: desktop }\n",
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := Parse([]byte(yaml)); err == nil {
@@ -208,55 +208,55 @@ func TestParseUnknownFieldFails(t *testing.T) {
 
 func TestValidationErrors(t *testing.T) {
 	// base es un manifiesto válido al que cada caso le añade la pega.
-	const base = "version: 2\ndimensions: [ux]\nprofiles:\n  d: { machine: d, params: { ux: desktop } }\n"
+	const base = "version: 1\ndimensions: [ux]\nprofiles:\n  d: { machine: d, params: { ux: desktop } }\n"
 	cases := []struct {
 		name string
 		yaml string
 		want string // fragmento que debe aparecer en el error
 	}{
 		{
-			name: "versión 1 ya no se acepta",
-			yaml: "version: 1\nprofiles:\n  d: { machine: d }\n",
-			want: "solo entiende la versión 2",
+			name: "otra versión no se acepta",
+			yaml: "version: 2\nprofiles:\n  d: { machine: d }\n",
+			want: "solo entiende la versión 1",
 		},
 		{
 			name: "sin perfiles",
-			yaml: "version: 2\n",
+			yaml: "version: 1\n",
 			want: "al menos un perfil",
 		},
 		{
 			name: "perfil sin machine",
-			yaml: "version: 2\nprofiles:\n  d: { description: x }\n",
+			yaml: "version: 1\nprofiles:\n  d: { description: x }\n",
 			want: "profiles.d.machine: falta",
 		},
 		{
 			name: "machine con barra",
-			yaml: "version: 2\nprofiles:\n  d: { machine: a/b }\n",
+			yaml: "version: 1\nprofiles:\n  d: { machine: a/b }\n",
 			want: "no puede llevar barras",
 		},
 		{
 			name: "falta un param",
-			yaml: "version: 2\ndimensions: [ux, identity]\nprofiles:\n  d: { machine: d, params: { ux: desktop } }\n",
+			yaml: "version: 1\ndimensions: [ux, identity]\nprofiles:\n  d: { machine: d, params: { ux: desktop } }\n",
 			want: "falta el valor de la dimensión \"identity\"",
 		},
 		{
 			name: "param de más",
-			yaml: "version: 2\ndimensions: [ux]\nprofiles:\n  d: { machine: d, params: { ux: desktop, color: red } }\n",
+			yaml: "version: 1\ndimensions: [ux]\nprofiles:\n  d: { machine: d, params: { ux: desktop, color: red } }\n",
 			want: "params.color: no es ninguna dimensión",
 		},
 		{
 			name: "valor vacío",
-			yaml: "version: 2\ndimensions: [ux]\nprofiles:\n  d: { machine: d, params: { ux: \"\" } }\n",
+			yaml: "version: 1\ndimensions: [ux]\nprofiles:\n  d: { machine: d, params: { ux: \"\" } }\n",
 			want: "params.ux: está vacío",
 		},
 		{
 			name: "dimensión reservada",
-			yaml: "version: 2\ndimensions: [machines]\nprofiles:\n  d: { machine: d, params: { machines: x } }\n",
+			yaml: "version: 1\ndimensions: [machines]\nprofiles:\n  d: { machine: d, params: { machines: x } }\n",
 			want: "nombre reservado",
 		},
 		{
 			name: "dimensión repetida",
-			yaml: "version: 2\ndimensions: [ux, ux]\nprofiles:\n  d: { machine: d, params: { ux: desktop } }\n",
+			yaml: "version: 1\ndimensions: [ux, ux]\nprofiles:\n  d: { machine: d, params: { ux: desktop } }\n",
 			want: "está repetida",
 		},
 		{
@@ -357,7 +357,7 @@ func TestLoadMissingFile(t *testing.T) {
 
 func TestValidateLayout(t *testing.T) {
 	const yaml = `
-version: 2
+version: 1
 dimensions: [identity]
 profiles:
   a: { machine: one, params: { identity: personal } }
