@@ -52,8 +52,8 @@ y lo de `machines/laptop`. De momento no hace falta más: lo vas a ver funcionar
 ## 2. Ponle nombre a tu máquina
 
 La plantilla trae un regalo que cambia el nombre del equipo según la máquina. Para
-el perfil `laptop`, el nombre está en `machines/laptop/system/hostname` y es,
-literalmente, `laptop`.
+el perfil `laptop`, el nombre está en `machines/laptop/system/hostname` y es
+`mi-laptop`.
 
 Si quieres otro, edita ese fichero en GitHub (o en tu clon) y pon el que prefieras.
 Si no quieres que toque el nombre del equipo, bórralo junto con su entrada en
