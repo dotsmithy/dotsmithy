@@ -13,7 +13,7 @@ import (
 func writeMinimalContent(t *testing.T) string {
 	t.Helper()
 	content := t.TempDir()
-	manifest := "version: 2\nprofiles: { minipc: { description: t, machine: minipc } }\n"
+	manifest := "version: 1\nprofiles: { minipc: { description: t, machine: minipc } }\n"
 	if err := os.WriteFile(filepath.Join(content, "dots.yaml"), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}
