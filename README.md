@@ -1,88 +1,50 @@
 # dotsmithy
 
-La **herrería de tus dotfiles**. `dotsmithy` es un gestor de dotfiles pensado como
-producto: un **motor** genérico (este repo, en Go) y tu **contenido** personal
-(dotfiles reales, paquetes, perfiles de máquina) en un repo aparte. El único
-contrato entre ambos es un manifiesto declarativo, `dots.yaml`.
+**La herrería de tus dotfiles.** Tus ficheros de configuración, tus paquetes y los
+ajustes de cada máquina, guardados en un repo tuyo y aplicados con un solo comando.
 
-> Estado: **motor funcional** (bootstrap, `init`/`link`/`update`, paquetes, hooks,
-> `system` y externals), cubierto por tests + integración en Fedora. En fase de
-> **piloto** (minipc) antes de la primera release.
+dotsmithy tiene dos piezas: un **motor** (este repo, el comando `dots`) que sabe
+hacer el trabajo, y tu **contenido** (un repo privado con tus dotfiles de verdad)
+que dice qué hay que hacer. Se entienden a través de un fichero, `dots.yaml`. Tú
+editas tus ficheros como siempre y `dots` se encarga de que cada máquina tenga lo
+suyo.
 
-## Idea en dos líneas
+> [!NOTE]
+> dotsmithy está pensado para **Fedora**. Funciona y está cubierto por tests, pero
+> todavía no ha llegado a la v1.0, así que puede cambiar algún detalle.
 
-- **Motor** (este repo): bootstrap, despliegue de symlinks (modelo Stow), paquetes,
-  perfiles de máquina, hooks y externals. Genérico, versionado y testeado. No guarda
-  nada personal.
-- **Contenido** (repo privado tuyo): los ficheros de verdad. Se engancha al motor por
-  `dots.yaml`.
+## Pruébalo en un minuto
 
-Es el patrón librería/SDK + aplicación: el motor es la pieza reutilizable; el
-contenido, tu instancia.
-
-## Perfiles compuestos
-
-Cada máquina se aplica con un **perfil**, que es una pila de capas: una común
-(`shared`), una por cada dimensión que declare tu contenido (por ejemplo, con
-escritorio o solo terminal; identidad personal o de trabajo) y la de la máquina
-(`machines/<máquina>`). Dotfiles, paquetes, hooks, repos COPR, externals y
-ficheros de sistema se reparten por capa, y cada máquina recibe solo lo de las
-suyas.
-
-El esquema completo de `dots.yaml` está en [docs/manifiesto.md](docs/manifiesto.md).
-
-## Instalación (bootstrap)
-
-En una máquina limpia, una sola línea baja el motor y cede el control a `dots init`:
+En una Fedora limpia, esta línea instala `dots` (y su atajo `ds`):
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/kreikol/dotsmithy/main/script/install.sh | bash
 ```
 
-El instalador deja el mando `dots` (y su atajo `ds`) a mano.
-
-## Comandos
-
-| Comando          | Qué hace                                                        |
-| ---------------- | -------------------------------------------------------------- |
-| `dots init`      | Arranca una máquina desde cero (clave SSH, perfil, clon, aplica) |
-| `dots link`      | Despliega los dotfiles a `$HOME` (symlinks, modelo Stow)        |
-| `dots update`    | Trae los cambios del contenido y los aplica                     |
-| `dots add`       | Registra paquetes en una capa del contenido y los instala       |
-| `dots sync`      | Concilia los paquetes con lo declarado (o informa del drift)    |
-| `dots externals` | Trae y prepara los recursos externos declarados                 |
-
-Flags globales: `--dry-run` (`-n`), `--yes` (`-y`), `--verbose` (`-v`).
-
-## Desarrollo
-
-El toolchain vive en un [devbox](https://www.jetify.com/devbox) local (nada global):
+Luego le dices de dónde sale tu contenido y qué perfil quieres para esta máquina:
 
 ```sh
-devbox shell           # entra al entorno (go, shellcheck, goreleaser)
-devbox run build       # compila el binario en dist/dots
-devbox run test        # go test ./...
-devbox run lint-shim   # shellcheck del shim de bootstrap
+dots init --remote git@github.com:<tu-usuario>/<tu-contenido>.git --profile <perfil>
 ```
 
-### Tests de integración
+¿Aún no tienes repo de contenido? Créalo desde la
+[plantilla](https://github.com/kreikol/dotsmithy-content-template): el
+[tutorial](docs/tutorials/first-machine.md) te lleva de la mano.
 
-Corren el binario real en una Fedora limpia (dentro de un contenedor):
+## ¿Qué quieres hacer?
 
-```sh
-./tests/integration/run.sh
-```
+| | |
+| --- | --- |
+| 🧭 **Aprender desde cero** | Monta tu primera máquina paso a paso: [tutoriales](docs/tutorials/README.md) |
+| 🛠️ **Resolver algo concreto** | Añadir un dotfile, un paquete, un hook...: [guías](docs/how-to/README.md) |
+| 📖 **Consultar un detalle** | Comandos, `dots.yaml`, cómo se organiza el contenido: [referencia](docs/reference/README.md) |
+| 💡 **Entender cómo funciona** | Por qué está hecho así: [explicaciones](docs/explanation/README.md) |
 
-Esto necesita un **motor de contenedores en el sistema** (`podman` o `docker`).
-**No va en el devbox a propósito**: podman/docker son herramientas de sistema con
-integración de host (rootless, subuid/subgid, cgroups, storage) que vía Nix/devbox
-dan guerra y rara vez quedan limpias. El toolchain reproducible (Go, shellcheck,
-goreleaser) sí vive en el devbox; el motor de contenedores se toma del host. Puedes
-elegir cuál con `DOTS_CONTAINER_ENGINE=podman|docker`.
+Todo junto, en el [índice de la documentación](docs/README.md).
 
-En CI, la integración corre en cada PR (job «integración (Fedora)»). Además hay un
-workflow manual **Lab** (`workflow_dispatch`) que levanta una Fedora con `dots` ya
-aplicado y abre una sesión SSH (tmate) para trastear a mano.
+## ¿Quieres meterle mano al código?
+
+Mira [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licencia
 
