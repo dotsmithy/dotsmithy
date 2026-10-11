@@ -24,7 +24,7 @@ dots init [opciones]
 | --- | --- |
 | `--backup` | si hay ficheros reales donde irían symlinks, respáldalos (.dots-bak) y enlaza |
 | `--content <texto>` | ruta a un repo de contenido ya presente en local (alternativa a --remote) |
-| `--profile <texto>` | perfil de máquina a instalar (ej. minipc) |
+| `--profile <texto>` | perfil de máquina a instalar (ej. laptop) |
 | `--remote <texto>` | URL (SSH) del repo de contenido a clonar |
 
 ## Opciones globales
