@@ -8,27 +8,16 @@ sistema). Todo lo demás se saca de las carpetas.
 Esta página describe la **versión 1** del esquema. El motor solo entiende esa: un
 manifiesto con otra `version` se rechaza.
 
-## La idea: perfiles compuestos
+## La pila de capas
 
-Un perfil no es una carpeta, sino una **pila de capas**. El motor la construye
-siempre igual:
+Cada perfil se monta apilando capas, siempre en este orden:
 
 ```
 shared  →  <dimensión>/<valor> (una por dimensión, en orden)  →  machines/<máquina>
 ```
 
-- **`shared`**: lo común a todas las máquinas. Es opcional.
-- **Dimensiones**: los ejes en los que varían tus máquinas, y los declaras tú. Por
-  ejemplo `ux` (con escritorio o solo terminal) e `identity` (personal o trabajo).
-  Cada perfil elige un valor en cada dimensión, y la capa vive en
-  `<dimensión>/<valor>` (`ux/desktop`, `identity/work`...). El motor no sabe qué
-  significa cada una: solo las apila.
-- **`machines/<máquina>`**: lo propio de una máquina concreta. Siempre está y
-  siempre va la última.
-
-Así, una máquina sin escritorio y con identidad de trabajo se monta con
-`shared + ux/terminal + identity/work + machines/<la-suya>`, sin copiar ficheros
-de ningún sitio.
+`shared` es opcional; la de la máquina siempre está y siempre va la última. El
+porqué de este modelo está en [perfiles y capas](../explanation/profiles-and-layers.md).
 
 ## Ejemplo completo
 
@@ -76,7 +65,8 @@ layers:
         validate: "grep -q example {file}"
 ```
 
-Y el contenido que le corresponde:
+Y el contenido que le corresponde (detalle en
+[cómo se organiza el contenido](content-layout.md)):
 
 ```
 dots.yaml
@@ -141,8 +131,9 @@ Qué se enlaza por symlinks y dónde.
 | ---------- | ------------------------------------------------------------------- |
 | `managers` | Gestores activos. Hoy solo `dnf` está implementado (el esquema reconoce también `pip`, `npm` y `cargo`, para más adelante). |
 
-Las listas viven en `<capa>/packages/<gestor>.txt`: un paquete por línea, con
-comentarios con `#`. Se juntan las de todas las capas de la pila.
+Las listas viven en `<capa>/packages/<gestor>.txt`
+([formato](content-layout.md#packages-las-listas-de-paquetes)). Se juntan las de
+todas las capas de la pila.
 
 ### `hooks`
 
@@ -150,8 +141,9 @@ comentarios con `#`. Se juntan las de todas las capas de la pila.
 | -------- | ----------- | ------------------------------------------------------------ |
 | `points` | todos       | Puntos activos: `post-link`, `post-packages`, `post-init`. |
 
-Los hooks no se declaran aquí: son ficheros en `<capa>/hooks/<punto>/*.sh`
-(detalle en la sección de hooks, más abajo).
+Los hooks no se declaran aquí: son ficheros en `<capa>/hooks/<punto>/*.sh`. Cómo
+se nombran, en qué orden corren y qué variables reciben está en
+[cómo se organiza el contenido](content-layout.md#hooks-scripts-en-el-momento-justo).
 
 ### `layers`
 
@@ -174,7 +166,9 @@ Cada capa admite:
   | `repo` | Repo a clonar (obligatorio con `git`).                     |
   | `ref`  | Rama, tag o commit (con `git`).                            |
   | `url`  | URL a descargar (obligatorio con `file`).                  |
-  | `post` | Script que corre cuando el recurso cambia. Ruta relativa a la carpeta de la capa. |
+  | `post` | Script que corre cuando el recurso cambia. Ruta relativa a la carpeta de la capa. Recibe las [mismas variables que un hook](content-layout.md#variables-que-recibe-cada-hook) más `DOTS_EXTERNAL_DEST`. |
+
+  Si un external falla, `dots` avisa y sigue con los demás.
 
 - **`system`**: ficheros de sistema fuera de `$HOME` (`/etc`, systemd...). Se
   colocan con `sudo` (o directamente si ya eres root).
@@ -193,55 +187,11 @@ Cada capa admite:
 - **Dotfiles** (`<capa>/home/`): si dos capas tienen el mismo fichero, gana la
   última de la pila. La máquina pisa a todo lo demás.
 - **Paquetes, COPR, externals y system**: se unen los de todas las capas.
-- **Hooks**: se juntan todos y se ejecutan por nombre de fichero (ver abajo).
+- **Hooks**: se juntan todos y se ejecutan por nombre de fichero
+  ([detalle](content-layout.md#hooks-scripts-en-el-momento-justo)).
 
 Las capas que no son del perfil no aportan nada: lo de `ux/desktop` no llega
 nunca a una máquina con `ux: terminal`.
-
-## Hooks
-
-Un hook es un script bash en `<capa>/hooks/<punto>/NN-nombre.sh`.
-
-- En cada punto se juntan los hooks de **todas** las capas de la pila y se
-  ejecutan por **orden de nombre**, así que el número `NN-` manda aunque vengan de
-  capas distintas. Si dos se llaman igual, va antes el de la capa anterior.
-- Corren con el directorio de trabajo en la raíz del contenido.
-- Si uno falla, se para ahí (y se dice cuál). En `--dry-run` no se ejecuta
-  ninguno: solo se enseña qué correría.
-- Los hooks en `hooks/` en la raíz del contenido (donde vivían antes) **no se
-  ejecutan**. El motor avisa si los encuentra.
-
-Cada hook recibe estas variables:
-
-| Variable             | Valor                                                  |
-| -------------------- | ------------------------------------------------------ |
-| `DOTS_HOOK`          | Punto que se está ejecutando (ej. `post-link`).        |
-| `DOTS_PROFILE`       | Perfil activo.                                         |
-| `DOTS_MACHINE`       | Máquina del perfil.                                    |
-| `DOTS_PARAM_<DIM>`   | Valor del perfil en cada dimensión, con el nombre en mayúsculas (ej. `DOTS_PARAM_UX=terminal`). Lo que no vale en un nombre de variable pasa a `_`. |
-| `DOTS_CONTENT_DIR`   | Raíz del contenido.                                    |
-| `DOTS_TARGET`        | Destino de los symlinks, ya expandido (ej. tu `$HOME`). |
-| `DOTS_LAYERS`        | Pila de capas, separadas por espacios.                 |
-
-El `post` de un external recibe las mismas variables (con `DOTS_HOOK=externals`)
-y además `DOTS_EXTERNAL_DEST`, con el destino del recurso.
-
-## `dots add` y las capas
-
-`dots add <gestor> <paquete>...` registra los paquetes en una lista del contenido
-y los instala. Por defecto los apunta en la capa de la **máquina** del perfil
-activo, que es lo más prudente: no aparecen en otras máquinas sin que lo decidas.
-
-Para registrarlos en otra capa, `--layer`:
-
-```sh
-dots add dnf ripgrep               # machines/<máquina>/packages/dnf.txt
-dots add dnf tmux --layer shared   # shared/packages/dnf.txt
-```
-
-La capa tiene que ser una de las del perfil activo. Registrar en una capa que
-este perfil no aplica (por ejemplo `ux/desktop` en una máquina sin escritorio) no
-instalaría nada aquí, así que se rechaza.
 
 ## Validación
 
