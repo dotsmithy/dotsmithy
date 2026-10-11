@@ -15,7 +15,8 @@
     "scripts": {
       "build": "go build -o dist/dots ./cmd/dots",
       "test": "go test ./...",
-      "lint-shim": "shellcheck script/*.sh && bash -n script/install.sh"
+      "lint-shim": "shellcheck script/*.sh && bash -n script/install.sh",
+      "docs": "go generate ./tools/docgen"
     }
   }
 }

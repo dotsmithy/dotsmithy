@@ -26,6 +26,16 @@ jobs:
         run: go vet ./...
       - name: test
         run: go test ./...
+      - name: referencia de comandos al día
+        run: |
+          # La referencia de docs/reference/commands sale de la ayuda de los
+          # comandos: si alguien cambia la ayuda y no la regenera, falla aquí.
+          go generate ./tools/docgen
+          if ! git diff --exit-code -- docs/reference/commands \
+            || [ -n "$(git status --porcelain -- docs/reference/commands)" ]; then
+            echo "::error::la referencia de comandos está desfasada: ejecuta «devbox run docs» (o «go generate ./tools/docgen») y súbela"
+            exit 1
+          fi
 
   shellcheck:
     name: shellcheck (shim)

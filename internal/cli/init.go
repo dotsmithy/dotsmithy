@@ -141,7 +141,7 @@ falla por permisos, te enseña la clave pública y cómo añadirla.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&profile, "profile", "", "perfil de máquina a instalar (ej. minipc)")
+	cmd.Flags().StringVar(&profile, "profile", "", "perfil de máquina a instalar (ej. laptop)")
 	cmd.Flags().StringVar(&remote, "remote", "", "URL (SSH) del repo de contenido a clonar")
 	cmd.Flags().StringVar(&contentDir, "content", "", "ruta a un repo de contenido ya presente en local (alternativa a --remote)")
 	cmd.Flags().BoolVar(&backup, "backup", false, "si hay ficheros reales donde irían symlinks, respáldalos (.dots-bak) y enlaza")

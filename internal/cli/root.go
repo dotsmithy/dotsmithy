@@ -90,3 +90,10 @@ func notImplemented(name string) func(*cobra.Command, []string) error {
 		return nil
 	}
 }
+
+// Root devuelve la raíz del árbol de comandos, ya completa y en castellano
+// (subcomandos, plantilla de uso, completion...). La usa tools/docgen para
+// generar la referencia de comandos a partir de la propia ayuda.
+func Root() *cobra.Command {
+	return rootCmd
+}
