@@ -7,7 +7,6 @@ site_description = "La herrería de tus dotfiles"
 site_url = "https://kreikol.github.io/dotsmithy/"
 repo_url = "https://github.com/kreikol/dotsmithy"
 repo_name = "kreikol/dotsmithy"
-edit_uri = "edit/main/docs/"
 docs_dir = "docs"
 extra_css = ["assets/extra.css"]
 
@@ -54,7 +53,6 @@ features = [
   "navigation.top",
   "navigation.footer",
   "content.code.copy",
-  "content.action.edit",
   "search.highlight",
 ]
 
