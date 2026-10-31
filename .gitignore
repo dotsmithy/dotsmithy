@@ -6,7 +6,7 @@
 /tests/integration/dots
 # Binario del motor que compila el workflow Lab (el contenido de muestra sí se
 # versiona, en tests/lab/content)
-/tests/lab/dots
+/tests/lab/bin/
 # Web de la documentación generada por zensical (se publica desde CI)
 /site/
 
