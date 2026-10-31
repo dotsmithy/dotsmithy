@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/kreikol/dotsmithy/releases">
-    <img alt="Release" src="https://img.shields.io/github/v/release/kreikol/dotsmithy?include_prereleases&style=for-the-badge&color=ff8c42&label=release"/>
+  <a href="https://github.com/dotsmithy/dotsmithy/releases">
+    <img alt="Release" src="https://img.shields.io/github/v/release/dotsmithy/dotsmithy?style=for-the-badge&color=ff8c42&label=release"/>
   </a>
-  <a href="https://github.com/kreikol/dotsmithy/actions/workflows/ci.yml">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/kreikol/dotsmithy/ci.yml?branch=main&style=for-the-badge&label=CI"/>
+  <a href="https://github.com/dotsmithy/dotsmithy/actions/workflows/ci.yml">
+    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/dotsmithy/dotsmithy/ci.yml?branch=main&style=for-the-badge&label=CI"/>
   </a>
 </p>
 
@@ -22,7 +22,7 @@
     <img alt="SO: Fedora" src="https://img.shields.io/badge/SO-Fedora-51A2DA?style=flat-square&logo=fedora&logoColor=white"/>
   </a>
   <a href="https://go.dev">
-    <img alt="Go" src="https://img.shields.io/github/go-mod/go-version/kreikol/dotsmithy?style=flat-square&logo=go&logoColor=white&color=00ADD8"/>
+    <img alt="Go" src="https://img.shields.io/github/go-mod/go-version/dotsmithy/dotsmithy?style=flat-square&logo=go&logoColor=white&color=00ADD8"/>
   </a>
   <a href="LICENSE">
     <img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-blue?style=flat-square"/>

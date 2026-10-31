@@ -1,6 +1,11 @@
 # Web de la documentación: construye docs/ con zensical y la publica en GitHub
 # Pages. En las PR solo construye (en modo estricto: un enlace o un ancla rota
-# para el build), así la web nunca se rompe al mergear. Al llegar a main, publica.
+# para el build), así la web nunca se rompe al mergear.
+#
+# La web enseña lo publicado: solo se publica desde main, que únicamente recibe
+# versiones (el PR de release next → main). Así la web se estrena con cada
+# release y nunca muestra documentación de algo que aún no ha salido. Lanzado a
+# mano (workflow_dispatch) desde otra rama, como next, solo construye.
 name: Docs
 
 on:
@@ -47,6 +52,8 @@ jobs:
 
   deploy:
     name: publicar en GitHub Pages
+    # Solo desde main, también al lanzarlo a mano: desde next publicaría docs
+    # de algo sin publicar.
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest

@@ -4,9 +4,9 @@
 [project]
 site_name = "dotsmithy"
 site_description = "La herrería de tus dotfiles"
-site_url = "https://kreikol.github.io/dotsmithy/"
-repo_url = "https://github.com/kreikol/dotsmithy"
-repo_name = "kreikol/dotsmithy"
+site_url = "https://dotsmithy.github.io/dotsmithy/"
+repo_url = "https://github.com/dotsmithy/dotsmithy"
+repo_name = "dotsmithy/dotsmithy"
 docs_dir = "docs"
 extra_css = ["assets/extra.css"]
 
