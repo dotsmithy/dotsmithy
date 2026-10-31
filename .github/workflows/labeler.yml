@@ -1,0 +1,23 @@
+# Labeler: pone en cada PR los labels de área (documentation, ci, installer,
+# tests) según los ficheros que toca. Reglas en .github/labeler.yml.
+#
+# Prueba de este PR: de momento va con pull_request para poder verlo en acción
+# antes de mergear (con pull_request_target no se ejecutaría aquí).
+name: Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  label:
+    name: labels de área
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@v7
