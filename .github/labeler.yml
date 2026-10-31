@@ -1,0 +1,34 @@
+# Labels de área que pone el labeler en cada PR según los ficheros que toca.
+# Formato de actions/labeler v5 en adelante: cada label lista sus reglas de
+# ficheros cambiados. Los labels tienen que existir ya en el repo (el workflow
+# no tiene permiso para crearlos).
+
+# Documentación: la de usuario, la de contribuir, los .md de la raíz y la
+# configuración de la web.
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - contributing/**
+          - "*.md"
+          - zensical.toml
+
+# Integración continua: workflows y configuración de GitHub.
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+
+# El instalador (shim de bootstrap) y su prueba de instalación simulada.
+installer:
+  - changed-files:
+      - any-glob-to-any-file:
+          - script/install.sh
+          - tests/shim/**
+
+# Tests: los de Go y los escenarios de integración, lab e instalador.
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - tests/**
+          - "**/*_test.go"
