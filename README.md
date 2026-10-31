@@ -18,7 +18,7 @@ suyo.
 En una Fedora limpia, esta línea instala `dots` (y su atajo `ds`):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kreikol/dotsmithy/main/script/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/dotsmithy/dotsmithy/main/script/install.sh | bash
 ```
 
 Luego le dices de dónde sale tu contenido y qué perfil quieres para esta máquina:
@@ -28,7 +28,7 @@ dots init --remote git@github.com:<tu-usuario>/<tu-contenido>.git --profile <per
 ```
 
 ¿Aún no tienes repo de contenido? Créalo desde la
-[plantilla](https://github.com/kreikol/dotsmithy-content-template): el
+[plantilla](https://github.com/dotsmithy/content-template): el
 [tutorial](docs/tutorials/first-machine.md) te lleva de la mano.
 
 ## ¿Qué quieres hacer?
