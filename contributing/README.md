@@ -7,7 +7,7 @@
 ## Cómo se trabaja en el repo
 
 Ramas (`main`, `next`, `feat/`, `hotfix/`), pull requests, checks, Draft, issues y la
-plantilla de contenido: [flujo de trabajo](flujo-de-trabajo.md).
+plantilla de contenido: [flujo de trabajo](workflow.md).
 
 ## Lo que vendrá
 

@@ -11,7 +11,7 @@ Lo básico para abrir un PR:
 - Si aún no está para revisar, ábrelo como **Draft**.
 
 Todo el detalle (ramas, checks, Draft, issues y la plantilla) está en
-[cómo se trabaja en el repo](contributing/flujo-de-trabajo.md), y cómo montar el
+[cómo se trabaja en el repo](contributing/workflow.md), y cómo montar el
 entorno y pasar los tests, en [contributing/](contributing/README.md).
 
 Si encuentras un fallo o se te ocurre una mejora, abre una

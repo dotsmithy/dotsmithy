@@ -13,7 +13,7 @@ un tag. Al empujar el tag, todo lo demás se publica solo:
 - **Web de la documentación**: se publica desde `main`
   (`.github/workflows/docs.yml`), así que enseña siempre lo publicado.
 
-Cómo se trabajan las ramas y los PRs: [contributing/flujo-de-trabajo.md](contributing/flujo-de-trabajo.md).
+Cómo se trabajan las ramas y los PRs: [contributing/workflow.md](contributing/workflow.md).
 
 ## El tag
 
