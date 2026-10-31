@@ -1,0 +1,2 @@
+# Paquetes solo para máquinas con escritorio.
+wl-clipboard

@@ -38,6 +38,38 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+# Notas de la versión: salen de los commits entre el tag anterior y el actual. Como
+# los PRs a next entran con squash, cada commit es un PR con su Conventional Commit,
+# así que basta con agruparlos por tipo.
+#
+# El tag anterior lo decide el workflow de release (GORELEASER_PREVIOUS_TAG): en una
+# versión final se salta los -rc, para que v1.1.0 cuente todo desde v1.0.x y no solo
+# desde el último rc. Se hace ahí porque git.ignore_tags y tag_sort: smartsemver son
+# de goreleaser Pro.
+changelog:
+  use: git
+  sort: asc
+  filters:
+    exclude:
+      # Los merge commits de next → main (release) y main → next (tras un hotfix)
+      # no aportan nada: lo que traen ya sale commit a commit.
+      - "^Merge pull request"
+      - "^Merge branch"
+      # Sincronizaciones automáticas (p.ej. la de la plantilla), por si acaban aquí.
+      - "^chore: sync "
+  groups:
+    - title: Funcionalidades
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Arreglos
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Documentación
+      regexp: '^.*?docs(\(.+\))??!?:.+$'
+      order: 2
+    - title: Otros
+      order: 999
+
 release:
   github:
     owner: dotsmithy
