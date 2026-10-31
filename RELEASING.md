@@ -20,10 +20,13 @@ Cómo se trabajan las ramas y los PRs: [contributing/flujo-de-trabajo.md](contri
 Tiene que ser **semver válido** (goreleaser lo exige): `vX.Y.Z`, con sufijo de
 pre-release opcional para las candidatas (`-rc.1`, `-rc.2`...).
 
-## Antes de la primera versión
+## La web de la documentación
 
-Activar GitHub Pages en el repo: **Settings → Pages → Source: GitHub Actions**. Si
-no, la web no se publica.
+Se publica desde `main` con GitHub Pages (origen **GitHub Actions**). El entorno
+`github-pages` del repo solo admite despliegues desde `main`. Ojo: si alguien
+desactiva y vuelve a crear Pages, GitHub deja el entorno restringido a la rama por
+defecto (`next`) y hay que volver a cambiarlo a `main` (Settings → Environments →
+github-pages).
 
 ## Candidatas (opcional): `vX.Y.Z-rc.N` sobre `next`
 
