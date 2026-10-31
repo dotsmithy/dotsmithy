@@ -1,0 +1,91 @@
+# Comprueba en cada push que dotsmithy entiende este contenido: que el manifiesto
+# es válido y que cada perfil se enlaza sin conflictos en un $HOME vacío.
+name: Validar contenido
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # Una vez por semana (lunes, 06:00 UTC), para enterarnos si una versión nueva
+  # de dotsmithy deja de entender la plantilla aunque nadie la haya tocado. Solo
+  # cuenta en la plantilla: en tu repo, los jobs se saltan en esta ejecución.
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: manifiesto + link por perfil
+    if: github.event_name != 'schedule' || github.repository == 'dotsmithy/content-template'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Instala la última release de dotsmithy con su propio instalador, igual
+      # que en una máquina de verdad.
+      - name: instalar dots
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/dotsmithy/dotsmithy/main/script/install.sh \
+            | DOTS_BIN="$RUNNER_TEMP/bin" bash
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/bin/dots" --version
+
+      - name: shellcheck de los hooks
+        run: |
+          shopt -s globstar nullglob
+          hooks=(./**/hooks/**/*.sh)
+          if [ ${#hooks[@]} -gt 0 ]; then shellcheck "${hooks[@]}"; fi
+
+      - name: link de cada perfil en un $HOME vacío
+        run: |
+          for profile in $(yq '.profiles | keys | .[]' dots.yaml); do
+            echo "::group::perfil $profile"
+            home=$(mktemp -d)
+            HOME="$home" dots link --content "$PWD" --profile "$profile"
+            echo "::endgroup::"
+          done
+
+  fedora:
+    # El init completo (paquetes y hooks incluidos) en una Fedora limpia. Solo en
+    # la plantilla: en tu repo, con tus paquetes y hooks de verdad, sería lento y
+    # depende de cosas (systemd, red...) que un contenedor de CI no tiene.
+    if: github.repository == 'dotsmithy/content-template'
+    name: init completo en Fedora
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: instalar dots
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/dotsmithy/dotsmithy/main/script/install.sh \
+            | DOTS_BIN="$PWD/.bin" bash
+          cp .bin/dots ./dots
+      # En un contenedor, /etc/hostname es un bind mount del runtime y no se puede
+      # reemplazar (el motor escribe en un temporal y lo mueve encima: "Device or
+      # resource busy"). Con --privileged lo desmontamos y queda el fichero normal
+      # de la imagen, como en una máquina de verdad. Sin systemd, el hook de
+      # hostname se salta el cambio en caliente; aquí se comprueba el fichero.
+      - name: dots init de cada perfil
+        run: |
+          # Parejas perfil:máquina, para comprobar el hostname de cada una.
+          profiles=$(yq '.profiles | to_entries | .[] | .key + ":" + .value.machine' dots.yaml | tr '\n' ' ')
+          docker run --rm --privileged -v "$PWD:/w" -w /w -e PROFILES="$profiles" fedora:41 bash -c '
+            set -euo pipefail
+            umount /etc/hostname
+            install -m 0755 dots /usr/local/bin/dots
+            for pair in $PROFILES; do
+              profile=${pair%%:*} machine=${pair#*:}
+              echo "::group::perfil $profile"
+              export HOME=$(mktemp -d)
+              dots init --content /w --profile "$profile" --yes
+              # Los regalos de la plantilla: el perfil para la bienvenida y el hostname.
+              cat "$HOME/.cache/dotsmithy/profile.env"
+              grep -qx "DOTS_PROFILE=$profile" "$HOME/.cache/dotsmithy/profile.env"
+              echo "/etc/hostname: $(cat /etc/hostname)"
+              test "$(cat /etc/hostname)" = "$(cat "machines/$machine/system/hostname")"
+              echo "::endgroup::"
+            done
+          '

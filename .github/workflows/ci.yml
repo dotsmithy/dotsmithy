@@ -83,3 +83,43 @@ jobs:
             ln -sf dots /usr/local/bin/ds
             bash tests/integration/profiles.sh
           '
+
+  # La plantilla de contenido (template/) es parte del producto y va a la par que el
+  # motor: se valida con el dots compilado en este mismo PR, no con la última
+  # release. Así un cambio de esquema y su plantilla se prueban juntos antes de
+  # mergear. Es lo mismo que hace template/.github/workflows/validate.yml en el
+  # repo espejo, pero contra el motor de la rama.
+  template:
+    name: plantilla
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: build
+        run: go build -o dist/dots ./cmd/dots
+      - name: shellcheck de los hooks
+        working-directory: template
+        run: |
+          shopt -s globstar nullglob
+          hooks=(./**/hooks/**/*.sh)
+          if [ ${#hooks[@]} -gt 0 ]; then shellcheck "${hooks[@]}"; fi
+      # Cargar el manifiesto ya lo valida; después enlazamos cada perfil en un
+      # $HOME vacío para ver que no hay conflictos ni capas rotas.
+      - name: link de cada perfil en un $HOME vacío
+        working-directory: template
+        run: |
+          dots="$GITHUB_WORKSPACE/dist/dots"
+          profiles=$(yq '.profiles | keys | .[]' dots.yaml)
+          if [ -z "$profiles" ]; then
+            echo "::error::el manifiesto de la plantilla no declara ningún perfil"
+            exit 1
+          fi
+          for profile in $profiles; do
+            echo "::group::perfil $profile"
+            home=$(mktemp -d)
+            HOME="$home" "$dots" link --content "$PWD" --profile "$profile"
+            echo "::endgroup::"
+          done

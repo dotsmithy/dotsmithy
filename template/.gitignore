@@ -1,0 +1,4 @@
+# Basura de editores y del sistema
+*.swp
+*~
+.DS_Store

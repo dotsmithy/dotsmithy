@@ -1,0 +1,1 @@
+# Paquetes solo de esta máquina. `dots add dnf <paquete>` los apunta aquí.
