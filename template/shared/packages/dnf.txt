@@ -1,0 +1,4 @@
+# Paquetes para todas las máquinas. Uno por línea; las líneas vacías y las que
+# empiezan por # no cuentan.
+tmux
+tree

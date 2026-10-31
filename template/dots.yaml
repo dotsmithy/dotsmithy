@@ -1,0 +1,76 @@
+# dots.yaml: el contrato entre dotsmithy (el motor) y este repo (tu contenido).
+#
+# El motor solo conoce la forma de este fichero. Lo de dentro (perfiles,
+# paquetes, dotfiles) es tuyo: cámbialo a tu gusto. La referencia completa está en
+# https://dotsmithy.github.io/dotsmithy/
+version: 1
+
+# --- Dimensiones: los ejes en los que varían tus máquinas ---
+# Cada perfil elige un valor en cada dimensión, y lo de ese valor vive en la
+# carpeta <dimensión>/<valor>. Aquí hay una sola, `ux`:
+#   ux/desktop:  máquinas con escritorio
+#   ux/terminal: máquinas sin sesión gráfica (servidores, VMs...)
+# Puedes añadir más (por ejemplo `identity` con personal/work) o dejar la lista
+# vacía si todas tus máquinas son iguales.
+dimensions: [ux]
+
+# --- Perfiles: uno por cada tipo de máquina ---
+# Se elige al instalar, con `dots init --profile <nombre>`. La pila de capas de
+# cada perfil queda así (si un fichero se repite, gana la última):
+#   shared → ux/<valor> → machines/<machine>
+profiles:
+  laptop:
+    description: "Portátil con escritorio"
+    machine: laptop
+    params: { ux: desktop }
+  server:
+    description: "Servidor o VM sin escritorio"
+    machine: server
+    params: { ux: terminal }
+
+# --- Dotfiles: qué se enlaza y dónde ---
+# Lo que haya en <capa>/home/ se enlaza con symlinks en tu $HOME.
+stow:
+  target: ~
+  subdir: home
+
+# --- Paquetes ---
+# Las listas viven en <capa>/packages/dnf.txt, un paquete por línea.
+packages:
+  managers: [dnf]
+
+# --- Hooks ---
+# Scripts en <capa>/hooks/<punto>/NN-nombre.sh, que se ejecutan por orden de
+# nombre en cada punto.
+hooks:
+  points: [post-link, post-packages, post-init]
+
+# --- Lo que no es un fichero: COPR, recursos externos y ficheros de sistema ---
+# Se declara por capa.
+layers:
+  # Nombre del equipo por máquina: se copia a /etc/hostname, y el hook
+  # shared/hooks/post-link/20-hostname.sh lo aplica en caliente.
+  # OJO: cambia el nombre del equipo de verdad. Ajústalo a tus máquinas o bórralo.
+  machines/laptop:
+    system:
+      - src: system/hostname
+        dest: /etc/hostname
+        type: copy
+        mode: "0644"
+  machines/server:
+    system:
+      - src: system/hostname
+        dest: /etc/hostname
+        type: copy
+        mode: "0644"
+
+  # Más ejemplos (quita el # para usarlos):
+  #
+  # ux/desktop:
+  #   copr: [usuario/repo]            # repos COPR que habilitar antes de instalar
+  # shared:
+  #   externals:                      # repos o ficheros que el motor descarga
+  #     - dest: ~/.config/nvim
+  #       type: git
+  #       repo: https://github.com/usuario/nvim-config
+  #       ref: main
