@@ -1,0 +1,128 @@
+# Publicar la plantilla: copia template/ al repo espejo dotsmithy/content-template
+# en cada versión final, con commit "chore: sync template from dotsmithy vX.Y.Z" y el
+# mismo tag. Así, quien pulsa "Use this template" se lleva siempre la plantilla que
+# corresponde a la última versión publicada del motor.
+#
+# Se dispara con el push del tag (no con el evento release: la release la crea
+# goreleaser con GITHUB_TOKEN, y lo que hace ese token no dispara otros workflows).
+# Los rc (tags con '-') no se sincronizan.
+#
+# A mano (workflow_dispatch) sirve para probar y para resincronizar una versión ya
+# publicada. Por defecto va en seco (dry_run): enseña el diff y no sube nada.
+#
+# Escribe en el espejo con la GitHub App de la organización (dotsmithy-template-sync),
+# instalada solo en content-template. Su ruleset solo deja actualizar main y crear
+# tags a esa App: nadie edita el espejo a mano.
+name: Publicar plantilla
+
+on:
+  push:
+    tags: ["v*", "!v*-*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Versión final ya publicada a sincronizar (p.ej. v1.0.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "En seco: enseñar el diff sin subir nada"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# Una sincronización a la vez; si llegan dos, la segunda espera (no se cancela).
+concurrency:
+  group: template-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: sincronizar plantilla
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - name: comprobar el tag
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$TAG' no es una versión final (vX.Y.Z). Los rc no se sincronizan."
+            exit 1
+          fi
+          echo "Versión: $TAG · en seco: ${DRY_RUN:-false}"
+
+      # Token de corta duración de la App, limitado al repo espejo.
+      - name: token de la App
+        id: app
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.TEMPLATE_SYNC_APP_ID }}
+          private-key: ${{ secrets.TEMPLATE_SYNC_PRIVATE_KEY }}
+          owner: dotsmithy
+          repositories: content-template
+
+      - name: checkout del motor en el tag
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          path: engine
+
+      - name: checkout del espejo
+        uses: actions/checkout@v7
+        with:
+          repository: dotsmithy/content-template
+          token: ${{ steps.app.outputs.token }}
+          path: mirror
+          fetch-depth: 0
+
+      # Los commits y tags del espejo los firma la identidad del bot de la App.
+      - name: identidad del bot
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          SLUG: ${{ steps.app.outputs.app-slug }}
+        run: |
+          id=$(gh api "/users/${SLUG}%5Bbot%5D" --jq .id)
+          git -C mirror config user.name "${SLUG}[bot]"
+          git -C mirror config user.email "${id}+${SLUG}[bot]@users.noreply.github.com"
+
+      - name: copiar template/ al espejo
+        run: |
+          rsync -a --delete --exclude .git engine/template/ mirror/
+          git -C mirror add -A
+          git -C mirror status --short
+
+      - name: commit, tag y push
+        working-directory: mirror
+        run: |
+          changes=true
+          if git diff --cached --quiet; then changes=false; fi
+
+          # Idempotente: si el tag ya está en el espejo, esa versión ya se publicó.
+          # Solo es un error si el contenido de ahora no coincide con el publicado.
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            if [ "$changes" = true ]; then
+              echo "::error::$TAG ya está en el espejo con otro contenido. Los tags publicados no se mueven: saca una versión nueva."
+              git diff --cached --stat
+              exit 1
+            fi
+            echo "$TAG ya está publicado en el espejo y coincide. Nada que hacer."
+            exit 0
+          fi
+
+          if [ "$DRY_RUN" = true ]; then
+            echo "En seco: esto es lo que se subiría para $TAG."
+            if [ "$changes" = true ]; then git diff --cached --stat; git diff --cached; else echo "(sin cambios de contenido, solo el tag)"; fi
+            exit 0
+          fi
+
+          if [ "$changes" = true ]; then
+            git commit -m "chore: sync template from dotsmithy $TAG"
+          else
+            echo "Sin cambios de contenido: solo se pone el tag."
+          fi
+          git tag -a "$TAG" -m "dotsmithy $TAG"
+          git push origin HEAD:main
+          git push origin "refs/tags/$TAG"
