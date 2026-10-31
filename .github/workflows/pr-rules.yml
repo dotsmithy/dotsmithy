@@ -1,0 +1,66 @@
+# Reglas de los PR: comprobaciones baratas que sostienen el flujo de ramas.
+#
+# - Título: con squash, el título del PR es el commit que queda en next y el que
+#   sale en el changelog, así que tiene que ser un Conventional Commit. Se acepta
+#   también el tipo «release», que es el del PR next → main.
+# - Origen: a main solo llegan versiones (desde next) y arreglos urgentes (desde
+#   hotfix/*). Cualquier otro PR a main falla; los PR a otras ramas pasan sin más.
+#
+# Los dos jobs corren en todos los PR (también al editar el título), para que se
+# puedan exigir como checks obligatorios.
+name: Reglas de PR
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    name: título Conventional Commit
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            chore
+            test
+            refactor
+            ci
+            build
+            perf
+            style
+            revert
+            release
+
+  source:
+    name: origen de PR a main
+    runs-on: ubuntu-latest
+    steps:
+      - name: comprobar la rama de origen
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          if [ "$BASE" != "main" ]; then
+            echo "El PR va a «$BASE»: no hay nada que comprobar."
+            exit 0
+          fi
+          case "$HEAD" in
+            next|hotfix/*)
+              echo "PR a main desde «$HEAD»: correcto."
+              ;;
+            *)
+              echo "::error::Un PR a main solo puede venir de «next» (una release) o de «hotfix/*» (un arreglo urgente). Este viene de «$HEAD»: apúntalo a «next»."
+              exit 1
+              ;;
+          esac

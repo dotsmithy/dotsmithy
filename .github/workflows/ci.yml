@@ -1,11 +1,11 @@
-# CI de dotsmithy: gate de cada PR (y de los push a main).
+# CI de dotsmithy: gate de cada PR (y de los push a main y a next).
 # Compila, pasa go vet + go test, linta el shim y corre la integración en Fedora.
 name: CI
 
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, next]
 
 permissions:
   contents: read
