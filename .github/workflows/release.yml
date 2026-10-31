@@ -24,6 +24,24 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      # Tag anterior para el changelog. En una versión final (vX.Y.Z) se busca la
+      # versión final anterior, saltándose los -rc; si no hay ninguna (la primera
+      # versión estable), se cuenta desde el primer commit del repo. En un -rc se deja
+      # que goreleaser use el tag anterior tal cual (puede ser otro rc).
+      - name: tag anterior para el changelog
+        if: github.event_name == 'push'
+        run: |
+          tag="$GITHUB_REF_NAME"
+          case "$tag" in
+            *-*) echo "pre-release: tag anterior por defecto" ;;
+            *)
+              if prev=$(git describe --tags --abbrev=0 --exclude '*-*' "$tag^" 2>/dev/null); then :; else
+                prev=$(git rev-list --max-parents=0 "$tag" | tail -n1)
+              fi
+              echo "tag anterior: $prev"
+              echo "GORELEASER_PREVIOUS_TAG=$prev" >> "$GITHUB_ENV"
+              ;;
+          esac
       - uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"
