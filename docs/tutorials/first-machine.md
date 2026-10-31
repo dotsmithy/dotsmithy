@@ -17,7 +17,7 @@ Calcula unos 15 minutos.
 ## 1. Crea tu repo de contenido
 
 Tu contenido es el repo donde vivirán tus dotfiles. No hace falta montarlo a mano:
-parte de la [plantilla](https://github.com/kreikol/dotsmithy-content-template).
+parte de la [plantilla](https://github.com/dotsmithy/content-template).
 
 Entra en la plantilla, pulsa **Use this template** → **Create a new repository**,
 ponle nombre (usaremos `mis-dots`) y márcalo como **Private**: tus dotfiles son
@@ -27,7 +27,7 @@ cosa tuya.
 > Si usas la CLI de GitHub, lo mismo en una línea:
 >
 > ```sh
-> gh repo create mis-dots --template kreikol/dotsmithy-content-template --private
+> gh repo create mis-dots --template dotsmithy/content-template --private
 > ```
 
 Echa un vistazo a lo que trae. Lo más importante es `dots.yaml`, que define dos
@@ -68,7 +68,7 @@ Si no quieres que toque el nombre del equipo, bórralo junto con su entrada en
 Ya en tu Fedora, una línea:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kreikol/dotsmithy/main/script/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/dotsmithy/dotsmithy/main/script/install.sh | bash
 ```
 
 Instala el comando `dots` (y su atajo, `ds`). Compruébalo:

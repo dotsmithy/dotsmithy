@@ -28,7 +28,7 @@ El push del tag dispara `release.yml`. Al terminar, la Release y sus binarios
 quedan publicados y el shim ya puede instalarlos:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kreikol/dotsmithy/main/script/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/dotsmithy/dotsmithy/main/script/install.sh | bash
 ```
 
 (Para instalar una versión concreta en vez de la última: `DOTS_VERSION=v0.1.0-alpha`.)

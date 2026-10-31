@@ -8,7 +8,7 @@
 # control a «dots init».
 #
 # Uso típico (una línea, en una Fedora recién puesta):
-#   curl -fsSL https://raw.githubusercontent.com/kreikol/dotsmithy/main/script/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/dotsmithy/dotsmithy/main/script/install.sh | bash
 # Y luego:
 #   dots init --profile <perfil> --remote <url-ssh-del-contenido>
 #
@@ -20,7 +20,7 @@
 
 set -euo pipefail
 
-readonly REPO="kreikol/dotsmithy"
+readonly REPO="dotsmithy/dotsmithy"
 readonly BIN_NAME="dots"
 readonly ALIAS_NAME="ds"
 
