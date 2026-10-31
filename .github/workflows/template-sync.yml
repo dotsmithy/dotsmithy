@@ -59,7 +59,7 @@ jobs:
         id: app
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.TEMPLATE_SYNC_APP_ID }}
+          client-id: ${{ vars.TEMPLATE_SYNC_CLIENT_ID }}
           private-key: ${{ secrets.TEMPLATE_SYNC_PRIVATE_KEY }}
           owner: dotsmithy
           repositories: content-template
