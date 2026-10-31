@@ -31,6 +31,11 @@
 
 ---
 
+> [!TIP]
+> La rama por defecto de este repo es `next`, donde se prepara la próxima versión.
+> Lo publicado está en [`main`](https://github.com/dotsmithy/dotsmithy/tree/main) y en
+> las [releases](https://github.com/dotsmithy/dotsmithy/releases).
+
 dotsmithy tiene dos piezas: un **motor** (este repo, el comando `dots`) que sabe
 hacer el trabajo, y tu **contenido** (un repo privado con tus dotfiles de verdad)
 que dice qué hay que hacer. Se entienden a través de un fichero, `dots.yaml`. Tú
