@@ -1,0 +1,30 @@
+# Labeler: pone en cada PR los labels de área (documentation, ci, installer,
+# tests) según los ficheros que toca. Reglas en .github/labeler.yml.
+#
+# Va con pull_request_target porque es el único disparador que deja etiquetar
+# PRs que llegan desde forks (con pull_request su token es de solo lectura). Es
+# seguro aquí: no hay checkout ni se ejecuta código del PR; el labeler solo pide
+# por API la lista de ficheros cambiados y lee su configuración de la rama base.
+# NO añadas pasos que hagan checkout del PR o ejecuten su código.
+#
+# Ojo: con pull_request_target se usa la versión de la rama base, así que un
+# cambio en las reglas o en la versión mayor del labeler no se ve en su propio
+# PR. Para probarlo, pasa temporalmente a pull_request y vuelve antes de mergear.
+name: Labeler
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  label:
+    name: labels de área
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@v7
