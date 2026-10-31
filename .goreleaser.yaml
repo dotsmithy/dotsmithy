@@ -40,5 +40,5 @@ checksum:
 
 release:
   github:
-    owner: kreikol
+    owner: dotsmithy
     name: dotsmithy
