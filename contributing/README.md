@@ -1,16 +1,19 @@
 # Contribuir
 
 > [!NOTE]
-> Esta parte está en obras. Aquí irá todo lo necesario para trabajar en el motor.
-> De momento hay lo justo para montar el entorno y pasar los tests.
+> Esta parte está en obras. Lo que ya hay: cómo se trabaja en el repo, cómo montar
+> el entorno y pasar los tests, y cómo se publica una versión.
+
+## Cómo se trabaja en el repo
+
+Ramas (`main`, `next`, `feat/`, `hotfix/`), pull requests, checks, Draft, issues y la
+plantilla de contenido: [flujo de trabajo](flujo-de-trabajo.md).
 
 ## Lo que vendrá
 
-- **Entorno de desarrollo**: el devbox y qué trae.
+- **Entorno de desarrollo**: el devbox y qué trae, con más detalle.
 - **Tests**: unitarios, integración en Fedora y el shim de bootstrap.
 - **El Lab**: una Fedora con systemd para probar a mano.
-- **Flujo de trabajo**: ramas, commits y pull requests.
-- **Releases**: cómo se publica una versión.
 
 ## Mientras tanto
 
@@ -47,4 +50,4 @@ En CI, la integración corre en cada PR.
 
 - [El Lab](../tests/lab/README.md): una Fedora con systemd y `dots` aplicado, en
   local o en GitHub, para trastear a mano.
-- [Publicar una release](../RELEASING.md).
+- [Publicar una versión](../RELEASING.md).
