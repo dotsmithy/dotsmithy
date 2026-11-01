@@ -4,6 +4,11 @@
 > Esta parte está en obras. Aquí irá todo lo necesario para trabajar en el motor.
 > De momento hay lo justo para montar el entorno y pasar los tests.
 
+## Escribir documentación
+
+Dónde va cada cosa, el tono, el formato y cómo se ve en la web:
+[escribir documentación](documentation.md).
+
 ## Lo que vendrá
 
 - **Entorno de desarrollo**: el devbox y qué trae.
