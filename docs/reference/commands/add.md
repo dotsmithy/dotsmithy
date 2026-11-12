@@ -14,14 +14,17 @@ máquinas. Con --layer eliges otra (shared, ux/terminal...), pero tiene que ser
 una de las capas del perfil activo, porque registrar en una capa que este
 perfil no aplica no instalaría nada aquí.
 
-Ejemplos:
-  dots add dnf ripgrep fzf
-  dots add dnf tmux --layer shared
-
 ## Uso
 
 ```
 dots add <gestor> <paquete>... [opciones]
+```
+
+## Ejemplos
+
+```sh
+dots add dnf ripgrep fzf
+dots add dnf tmux --layer shared
 ```
 
 ## Opciones

@@ -93,7 +93,7 @@ func page(c *cobra.Command) string {
 	b.WriteString("```\n\n")
 
 	if c.HasExample() {
-		fmt.Fprintf(&b, "## Ejemplos\n\n```sh\n%s\n```\n\n", strings.TrimRight(c.Example, "\n"))
+		fmt.Fprintf(&b, "## Ejemplos\n\n```sh\n%s\n```\n\n", dedent(c.Example))
 	}
 
 	var subs []*cobra.Command
@@ -272,6 +272,29 @@ func tidyCode(s string) string {
 		s = strings.TrimSuffix(s, "\n\n```") + "\n```"
 	}
 	return s
+}
+
+// dedent quita la sangría común a todas las líneas y las líneas en blanco de los
+// extremos. Los Example de cobra van sangrados (así quedan bajo «Examples:» en la
+// ayuda de la terminal), pero en un bloque de código esa sangría sobra.
+func dedent(s string) string {
+	lines := strings.Split(strings.Trim(s, "\n"), "\n")
+	common := -1
+	for _, l := range lines {
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		n := len(l) - len(strings.TrimLeft(l, " \t"))
+		if common < 0 || n < common {
+			common = n
+		}
+	}
+	for i, l := range lines {
+		if len(l) >= common && common > 0 {
+			lines[i] = l[common:]
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 // cell prepara un texto para una celda de tabla: escapado y sin «|».
