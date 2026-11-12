@@ -74,3 +74,7 @@ release:
   github:
     owner: dotsmithy
     name: dotsmithy
+  # Las candidatas (tags con sufijo de pre-release, como v1.1.0-rc.1) salen como
+  # pre-release: GitHub no las marca como la última y el instalador no las usa
+  # salvo que se pida con DOTS_VERSION.
+  prerelease: auto

@@ -8,10 +8,20 @@
 # quien lanza el workflow. Con systemd dentro se pueden probar hooks que habilitan
 # servicios o instaladores que lo exigen. Para cerrarlo antes: sal de la shell
 # o haz `touch /tmp/close-lab`.
+#
+# Por defecto el lab compila dots desde el código de la rama. Con el input
+# dots_version (p.ej. v1.0.0-rc.2) instala en cambio esa release publicada con el
+# instalador, como en una máquina real: así se prueba una versión candidata.
+#   gh workflow run lab.yml -f dots_version=v1.0.0-rc.2
 name: Lab
 
 on:
   workflow_dispatch:
+    inputs:
+      dots_version:
+        description: "Release a instalar en vez de compilar (p.ej. v1.0.0-rc.2). Vacío = compilar desde la rama."
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -27,7 +37,7 @@ jobs:
         with:
           go-version-file: go.mod
       # Todo el montaje vive en tests/lab/up.sh (también sirve en local): compila
-      # dots, construye la imagen, arranca Fedora con systemd, aplica el contenido
+      # dots (o instala la release pedida), construye la imagen, arranca Fedora con systemd, aplica el contenido
       # de muestra como usuario normal y, con LAB_REMOTE=1, abre la sesión SSH.
       - name: levantar Fedora con systemd, aplicar y abrir SSH (upterm)
         env:
@@ -36,4 +46,7 @@ jobs:
           # Podman como root: el rootless del runner no deja a sudo leer
           # /etc/shadow dentro del contenedor.
           LAB_PODMAN: sudo podman
+          # Vacío = compilar; con versión, se instala esa release publicada. Va
+          # por variable de entorno, nunca interpolado en el script.
+          LAB_DOTS_VERSION: ${{ inputs.dots_version }}
         run: ./tests/lab/up.sh

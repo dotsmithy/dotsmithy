@@ -5,7 +5,10 @@
 # exigen. dots se aplica como el usuario "lab" (no root), igual que en una máquina
 # real: los pasos que piden root escalan con sudo.
 #
-# up.sh compila el binario (estático) en tests/lab/dots antes del build.
+# up.sh compila el binario (estático) en tests/lab/bin/dots antes del build. Si el
+# lab se monta con una release publicada (LAB_DOTS_VERSION), bin/ llega vacío: la
+# imagen sale sin dots y up.sh lo instala después con el instalador, como en una
+# máquina real.
 FROM fedora:41
 
 # systemd (PID 1), sudo (escalado de dots y hooks) y git (contenido). Sin limpiar
@@ -25,8 +28,12 @@ RUN curl -fsSL -o /tmp/upterm.tar.gz \
 	&& tar -xzf /tmp/upterm.tar.gz -C /usr/local/bin upterm \
 	&& rm -f /tmp/upterm.tar.gz
 
-COPY dots /usr/local/bin/dots
-RUN ln -sf dots /usr/local/bin/ds
+COPY bin/ /tmp/lab-bin/
+RUN if [ -f /tmp/lab-bin/dots ]; then \
+		install -m 0755 /tmp/lab-bin/dots /usr/local/bin/dots \
+		&& ln -sf dots /usr/local/bin/ds; \
+	fi \
+	&& rm -rf /tmp/lab-bin
 
 # El contenido de muestra se COPIA a la home del usuario, escribible y suyo, para
 # que los comandos que escriben en él (dots add, sync…) funcionen. El fixture del
