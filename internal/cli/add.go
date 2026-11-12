@@ -30,10 +30,8 @@ Por defecto los registra en la capa de la máquina del perfil activo
 (machines/<máquina>), que es lo más prudente: así no se cuelan en otras
 máquinas. Con --layer eliges otra (shared, ux/terminal...), pero tiene que ser
 una de las capas del perfil activo, porque registrar en una capa que este
-perfil no aplica no instalaría nada aquí.
-
-Ejemplos:
-  dots add dnf ripgrep fzf
+perfil no aplica no instalaría nada aquí.`,
+		Example: `  dots add dnf ripgrep fzf
   dots add dnf tmux --layer shared`,
 		Args: minArgs(2),
 		RunE: func(_ *cobra.Command, args []string) error {

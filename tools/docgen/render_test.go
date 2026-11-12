@@ -80,6 +80,16 @@ func TestProse(t *testing.T) {
 	}
 }
 
+// TestDedent comprueba que los ejemplos pierden la sangría común (y solo esa) y
+// las líneas en blanco de los extremos.
+func TestDedent(t *testing.T) {
+	in := "\n  dots add dnf fzf\n\n  dots add dnf tmux \\\n    --layer shared\n"
+	want := "dots add dnf fzf\n\ndots add dnf tmux \\\n  --layer shared"
+	if got := dedent(in); got != want {
+		t.Errorf("dedent:\n got %q\nwant %q", got, want)
+	}
+}
+
 // TestSentence comprueba la frase de entrada: mayúscula y punto, salvo el nombre
 // del producto, que va siempre en minúscula.
 func TestSentence(t *testing.T) {
