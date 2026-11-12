@@ -16,8 +16,7 @@ que te la leas entera: con el [tono](#tono-y-estilo) y la
 | Cómo se usa dotsmithy | `docs/` | quien instala y usa `dots` |
 | Cómo se trabaja en el motor | `contributing/` | quien quiere tocar el código o la doc |
 | La puerta de entrada | `README.md` | quien llega al repo por primera vez |
-| El aviso de cómo contribuir | `CONTRIBUTING.md` | GitHub lo enlaza en issues y PRs |
-| Cómo se publica una versión | `RELEASING.md` | quien saca una release |
+| Lo básico para contribuir, y el índice de `contributing/` | `CONTRIBUTING.md` | GitHub lo enlaza al abrir issues y PRs |
 
 `contributing/` va fuera de `docs/` a propósito: no es documentación de uso, y así
 no se cuela en la web ni en el índice de quien solo quiere usar `dots`.
@@ -136,8 +135,9 @@ llame de tres formas en tres páginas despista más que cualquier explicación m
 
 ## Formato
 
-- **Un `README.md` por carpeta**, que hace de índice: en GitHub se ve al abrir la
-  carpeta y en la web es la página de la sección.
+- **Un `README.md` por carpeta dentro de `docs/`**, que hace de índice de la
+  sección: en GitHub se ve al abrir la carpeta y en la web es la página de su
+  pestaña. `contributing/` no lleva: su índice es `CONTRIBUTING.md`.
 - **Enlaces relativos** a ficheros `.md` dentro de la documentación
   (`../reference/manifest.md`). Funcionan igual en GitHub y en la web. Lo que está
   fuera del repo (otra web, la plantilla publicada) va con su URL completa.
@@ -190,11 +190,13 @@ que se lee en GitHub es lo que sale en la web, y `zensical.toml` solo dice cómo
 presenta. Se publica desde `main`, así que la web siempre enseña la última versión
 publicada.
 
-Si añades una página nueva, enlázala en tres sitios:
+Si añades una página nueva, enlázala en dos sitios:
 
 1. El `README.md` de su cuadrante.
-2. El índice general, `docs/README.md`.
-3. El `nav` de `zensical.toml`, en su sección.
+2. El `nav` de `zensical.toml`, en su sección.
+
+La portada (`docs/README.md`) presenta los cuatro cuadrantes, pero no lista sus
+páginas: solo hay que tocarla si cambia un cuadrante.
 
 La excepción es la referencia de comandos: el `nav` solo enlaza su índice, así
 que un comando nuevo no obliga a tocar `zensical.toml`.
@@ -214,7 +216,7 @@ devbox run site-build   # la misma comprobación que el CI
 - [ ] Tuteo, lenguaje neutro, sin guiones largos y con los términos del glosario.
 - [ ] Enlaces relativos dentro de `docs/`, ninguno que salga de `docs/`.
 - [ ] Bloques de código con lenguaje, y sin `$` si son para copiar.
-- [ ] La página nueva está en el `README.md` de su cuadrante, en `docs/README.md` y
-      en el `nav` de `zensical.toml`.
+- [ ] La página nueva está en el `README.md` de su cuadrante y en el `nav` de
+      `zensical.toml`.
 - [ ] Si has tocado un comando, has pasado `devbox run docs`.
 - [ ] `devbox run site-build` pasa sin errores.
